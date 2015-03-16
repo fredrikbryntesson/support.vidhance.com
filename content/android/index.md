@@ -4,4 +4,16 @@ title = "Vidhance SDK for Android"
 menu = "android"
 +++
 
-# Getting Started
+# Prerequisites
+## System Requirements
+
+# Integration
+## Wrap Driver
+## Into Driver
+## Into App
+
+# Configuration Options
+## Motion
+### Complexity
+## Stabilization
+### Target Scale
