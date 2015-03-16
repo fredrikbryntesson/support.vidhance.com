@@ -1,0 +1,35 @@
+
+body > header,
+body > footer {
+	width: 100%;
+	text-align: center;
+	background-color: #062747;
+	color: white;
+}
+body > header > img {
+	max-width: 85%;
+	width: 12em;
+	padding: 1em;
+}
+body > footer > p {
+	padding: 1em;
+	font-size: 0.8em;
+	margin-bottom: 0;
+}
+body > nav,
+body > article > main {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 50em;
+	padding-top: 2em;
+	padding-bottom: 2em;
+	padding-left: 1em;
+	padding-right: 1em;
+}
+body > article > header {
+	text-align: center;
+}
+body > article > main > video {
+	width: 100%;
+	height: auto;
+}

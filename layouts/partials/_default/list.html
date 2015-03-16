@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+<head>
+{{ template "partials/head.html" . }}
+</head>
+<body>
+	<header>
+	{{ template "partials/header.html" . }}
+	</header>
+	<nav>
+	{{ template "partials/menu.html" .Site.Menus.main }}
+	</nav>
+	<main>
+		<section>
+			<header></header>
+			{{ range .Site.Sections.index.Pages.ByWeight }}
+			<article{{ with .Params.image}} class="figure"{{ end }}{{ with .Params.background }} style="background-image: url(/img/{{ . }})"{{ end }}>
+				<header>
+					<h1>{{ .Title }}</h1>
+				</header>
+				{{ with .Params.image}}
+				<figure>
+					<img src="/img/{{.}}">
+				</figure>
+				{{ end }}
+				<main>
+					{{ .Content }}
+				</main>
+				<footer>{{ with .Params.backgroundcopyright }}<p>{{ . }}</p>{{ end }}</footer>
+			</article>
+			{{ end }}
+			<footer></footer>
+		</section>
+	</main>
+	<footer>
+	{{ template "partials/footer.html" . }}
+	</footer>
+	{{ template "partials/foot.html" . }}
+</body>
+</html>
