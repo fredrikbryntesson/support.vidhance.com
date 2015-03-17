@@ -1,8 +1,10 @@
-+++
-date = "2015-03-11T14:32:03+01:00"
-title = "Vidhance Support"
-menu = "start"
-+++
+---
+date: "2015-03-11T14:32:03+01:00"
+title: "Vidhance Support"
+menu:
+  main:
+    weight: 20
+---
 
 This is the unified support portal for all of [Imint](http://imint.se)s [Vidhance](http://vidhance.com) products.
 

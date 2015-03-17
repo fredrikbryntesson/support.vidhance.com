@@ -1,0 +1,33 @@
+body > nav {
+  display: none;
+}
+
+nav,
+nav ul,
+nav li {
+  padding: 0px;
+  margin: 0px;
+}
+nav > ul > li {
+  float: left;
+}
+nav + * {
+  clear: left;
+}
+nav ul {
+  position: absolute;
+}
+nav li {
+  border: 1px solid #3366cc;
+  color: #000033;
+  background-color: #6699FF;
+  list-style-type: none;
+  position: relative;
+}
+nav a
+{
+  color: #000033;
+  display: block;
+  width: 100%;
+  text-decoration: none;
+}

@@ -1,7 +1,10 @@
 <ul>
-{{ range . }}
+	{{ range . }}
 	<li>
-		<a href="{{.Url}}">{{ .Name }}</a>
+			<a href="{{.Url}}">{{ .Name }}</a>
+			{{ if .HasChildren }}
+			{{ template "partials/menu.html" .Children }}
+			{{ end }}
 	</li>
-{{end}}
+	{{end}}
 </ul>
