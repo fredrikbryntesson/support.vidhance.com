@@ -5,5 +5,8 @@ rm -rf public/*
 hugo
 pushd public
 git add -A .
+echo "Please enter commit message:"
+read MESSAGE
+git commit -m "$MESSAGE"
 popd
 popd
