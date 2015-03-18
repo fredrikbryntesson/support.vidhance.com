@@ -3,7 +3,7 @@ date: "2015-03-11T14:32:03+01:00"
 title: "Vidhance SDK for Android"
 menu:
   main:
-    weight: 20
+    weight: 30
     name: "android"
 ---
 
