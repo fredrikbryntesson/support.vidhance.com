@@ -16,7 +16,7 @@ sudo apt-get install phablet-tools
 
 ### Downloading files
 1. Create a folder
-2. Download the [download script](../../download.sh) and run it inside the folder
+2. Download the [download script](android/evaluate/download.sh) and run it inside the folder
 3. Enter your key to start downloading the necessary files
 
 ## Phone
