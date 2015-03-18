@@ -4,6 +4,7 @@ title: "Vidhance SDK for Android"
 menu:
   main:
     weight: 20
+    name: "android"
 ---
 
 # Prerequisites

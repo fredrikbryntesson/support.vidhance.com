@@ -2,9 +2,7 @@
 	{{ range . }}
 	<li>
 			<a href="{{.Url}}">{{ .Name }}</a>
-			{{ if .HasChildren }}
-			{{ template "partials/menu.html" .Children }}
-			{{ end }}
+			{{ if .HasChildren }}{{ template "partials/menu.html" .Children }}{{ end }}
 	</li>
 	{{end}}
 </ul>

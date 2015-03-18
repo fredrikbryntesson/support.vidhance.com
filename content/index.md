@@ -3,7 +3,8 @@ date: "2015-03-11T14:32:03+01:00"
 title: "Vidhance Support"
 menu:
   main:
-    weight: 20
+    weight: 10
+    name: "start"
 ---
 
 This is the unified support portal for all of [Imint](http://imint.se)s [Vidhance](http://vidhance.com) products.

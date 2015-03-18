@@ -3,8 +3,9 @@ date: "2015-03-11T14:32:03+01:00"
 title: "Evaluate Vidhance Mobile"
 menu:
   main:
-    parent: 'Vidhance SDK for Android'
-    weight: 20
+    parent: "android"
+    weight: 10
+    name: "evaluate"
 ---
 # Prerequisites
 ## PC
