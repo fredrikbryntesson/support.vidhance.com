@@ -128,13 +128,14 @@ Before we can push the wrapper to the device we need to know the filename Androi
 
 It is recommended to create a backup of the original HAL implementation if you somehow manage to delete it by mistake. You can pull the library from the device with adb:
 ```
-adb pull /system/lib/hw/camera.msm8084.so ~/backup/
+adb pull /system/lib/hw/camera.msm8084.so <path on your computer>
 ```
 
-First take a look at the setup_device.sh script which demonstrates how to create the backend library from the default HAL implementation. This script only needs to be be run once. Make sure you set the *CAMERA_HAL* variable to the name of your original library.
+First take a look at the setup_device.sh script which demonstrates how to create the backend library from the default HAL implementation. Make sure you set the *CAMERA_HAL* variable to the name of your original library. The script also pushes the Vidhance library to the phone so make sure you have downloaded it and specified the correct path to it in the script. Once the script has completed you don't have to run it unless you reinstall Android on your phone or simply want to push a newer version of the Vidhance library.
 ```
 #!/bin/bash
 CAMERA_HAL=camera.msm8084.so
+VIDHANCE_PATH=./libs/libvidhance_android32.so
 
 echo "Waiting for device to go online..."
 adb wait-for-device
@@ -143,15 +144,26 @@ sleep 2
 echo "Waiting for device to go online..."
 adb wait-for-device
 adb shell mount -o remount,rw /system
-OUTPUT=$(adb shell ls /system/lib/hw/camera_backend.so)
-if [[ $OUTPUT == *"No such file or directory"* ]]
+echo "Creating camera backend library..."
+WRAPPER_OUTPUT=$(adb shell ls /system/lib/hw/camera_backend.so)
+if [[ $WRAPPER_OUTPUT == *"No such file or directory"* ]]
 then
-	echo "Creating camera backend library."
+	echo "Successfully Created camera backend library."
 	adb shell cp /system/lib/hw/$CAMERA_HAL /system/lib/hw/camera_backend.so
-	adb reboot
 else
-	echo "Camera backend library already exists!"
+	echo "Camera backend library already exists. Skipping."
 fi
+
+if [ ! -f $VIDHANCE_PATH ]
+then
+	echo "Couldn't find Vidhance library at" $VIDHANCE_PATH
+	echo "Have you downloaded the library and specified the correct path in the script?"
+else
+	echo "Pushing Vidhance library..."
+	adb push $VIDHANCE_PATH /system/lib/
+fi
+
+adb reboot
 
 ```
 
