@@ -124,9 +124,18 @@ The make.sh script is an example of how to use ndk-build to build the sources. Y
 
 # Pushing to phone
 Before we can push the wrapper to the device we need to know the filename Android expects when loading the camera HAL. For example, for Nexus 5 it is *camera.hammerhead.so* and for Nexus 6
-*camera.msm8084.so*. What we want to do is to rename the wrapper library to the expected filename and rename the actual HAL implementation to camera_backend.so so it can be loaded by the wrapper. Take a look at the push.sh script which demonstrates how to achieve this for Nexus 6. Also note that to be able to write to the filesystem we need to remount with write access.
+*camera.msm8084.so*. What we want to do is to rename the wrapper library to the expected filename and rename the actual HAL implementation to camera_backend.so so it can be loaded by the wrapper.
+
+It is recommended to create a backup of the original HAL implementation if you somehow manage to delete it by mistake. You can pull the library from the device with adb:
+```
+adb pull /system/lib/hw/camera.msm8084.so ~/backup/
+```
+
+First take a look at the setup_device.sh script which demonstrates how to create the backend library from the default HAL implementation. This script only needs to be be run once. Make sure you set the *CAMERA_HAL* variable to the name of your original library.
 ```
 #!/bin/bash
+CAMERA_HAL=camera.msm8084.so
+
 echo "Waiting for device to go online..."
 adb wait-for-device
 adb root
@@ -134,15 +143,45 @@ sleep 2
 echo "Waiting for device to go online..."
 adb wait-for-device
 adb shell mount -o remount,rw /system
-adb shell mv /system/lib/hw/camera_backend.so /system/lib/hw/camera_backend_temp.so
-adb shell mv /system/lib/hw/camera.msm8084.so /system/lib/hw/camera_backend.so
-adb shell mv /system/lib/hw/camera_backend_temp.so /system/lib/hw/camera_backend.so
-adb shell rm -f /system/lib/hw/camera.msm8084.so
-adb push ./libs/armeabi-v7a/libcamera_wrapper.so /system/lib/hw/camera.msm8084.so
-adb reboot
+OUTPUT=$(adb shell ls /system/lib/hw/camera_backend.so)
+if [[ $OUTPUT == *"No such file or directory"* ]]
+then
+	echo "Creating camera backend library."
+	adb shell cp /system/lib/hw/$CAMERA_HAL /system/lib/hw/camera_backend.so
+	adb reboot
+else
+	echo "Camera backend library already exists!"
+fi
+
+```
+
+Every time you have rebuilt the wrapper library you can use the push.sh script to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library.
+```
+#!/bin/bash
+CAMERA_HAL=camera.msm8084.so
+WRAPPER_PATH=./libs/armeabi-v7a/libcamera_wrapper.so
+
+OUTPUT=$(adb shell ls /system/lib/hw/$CAMERA_HAL)
+if [[ $OUTPUT == *"No such file or directory"* ]]
+then
+	echo "Couldn't find" $CAMERA_HAL "on the device. Are you using the correct filename?"
+else
+	echo Overwriting $CAMERA_HAL ...
+	echo "Waiting for device to go online..."
+	adb wait-for-device
+	adb root
+	sleep 2
+	echo "Waiting for device to go online..."
+	adb wait-for-device
+	adb shell mount -o remount,rw /system
+	adb shell rm -f /system/lib/hw/$CAMERA_HAL
+	adb push  $WRAPPER_PATH /system/lib/hw/$CAMERA_HAL
+	adb reboot
+fi
 
 ```
 # Using the Vidhance API
+Examine the *VidhanceProcessor* implementation in the nexus6 folder and use it as a tutorial of how to integrate Vidhance for Android. Here is a more detailed description of the code:
 ## Initializing
 Before you can use the Vidhance API you need to initialize it by calling the load function:
 ```
@@ -150,7 +189,7 @@ vidhance_load();
 ```
 ## Register callbacks
 ### GraphicBuffer
-Vidhance depends on a number of callbacks to interact with Android's GraphicBuffer. These callbacks are located in the vidhance folder and should NOT be modified. Simply include the header and supply Vidhance with the function pointers.
+Vidhance depends on a number of callbacks to interact with Android's GraphicBuffer. These callbacks are located in the vidhance folder and should **NOT** be modified. Simply include the header and supply Vidhance with the function pointers.
 ```
 #include "../vidhance/graphicbuffer/GraphicBufferWrapper.h"
 ```
