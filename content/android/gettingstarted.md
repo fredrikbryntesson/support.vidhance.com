@@ -8,8 +8,8 @@ menu:
     name: "getting started"
 ---
 
-
-This section will guide you through installing and setting up the environment you will need in order to use the Vidhance SDK for Android.
+# Introduction
+This section will describe how to integrate Vidhance by wrapping the camera driver on Android devices. This can be achieved by replacing the camera HAL implementation with a wrapper which internally will link to the original implementation. This enables the wrapper to monitor the requests sent to the camera and modify the input and output data.
 # Prerequisites
 + We recommend using a computer with Ubuntu 14.04
 + Android device with root access
@@ -119,10 +119,12 @@ const int alignedWidth[ALIGNED_WIDTH_COUNT] = { 32 * 4, 64 * 4, 96 * 4,
 ```
 If you wish to skip this step you can simply provide an empty array, however this will cause a significant drop in performance.
 
+<a name="Building"></a>
 # Building
 The make.sh script is an example of how to use ndk-build to build the sources. You are of course free to use your toolchain of choice. The build should generate libcamera_wrapper.so.
 
-# Pushing to phone
+<a name="PreparingPhoneForWrapper"></a>
+# Preparing phone for wrapper
 Before we can push the wrapper to the device we need to know the filename Android expects when loading the camera HAL. For example, for Nexus 5 it is *camera.hammerhead.so* and for Nexus 6
 *camera.msm8084.so*. What we want to do is to rename the wrapper library to the expected filename and rename the actual HAL implementation to camera_backend.so so it can be loaded by the wrapper.
 
@@ -167,6 +169,8 @@ adb reboot
 
 ```
 
+<a name="PushingToPhone"></a>
+# Pushing to phone
 Every time you have rebuilt the wrapper library you can use the push.sh script to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library.
 ```
 #!/bin/bash
@@ -262,3 +266,35 @@ void VidhanceProcessor::processVideoCapture(GraphicBuffer* graphicBuffer) {
     vidhance_context_process(context, (kean_draw_image*) image, (kean_draw_image*) image);
 }
 ```
+
+## Configuring settings
+It is recommended to use the default settings until you have successfully built and pushed to the device. The Vidhance API enables you to configure the settings of the different modules to optimize quality and performance for your device. Take a look in *vidhance.h* to see the available settings. As an example we will look at the motion settings:
+
+```
+/* Motion Settings */
+vidhance_motion_settings* vidhance_settings_getMotion(vidhance_settings* settings);
+void vidhance_motion_settings_setComplexity(vidhance_motion_settings* settings, int complexity);
+int vidhance_motion_settings_getComplexity(vidhance_motion_settings* settings);
+void vidhance_motion_settings_setMode(vidhance_motion_settings* settings, vidhance_motion_mode mode);
+vidhance_motion_mode vidhance_motion_settings_getMode(vidhance_motion_settings* settings);
+```
+
+First we need a reference to the motion settings from our base settings:
+```
+vidhance_settings* settings = vidhance_settings_new();
+vidhance_motion_settings* motionSettings = vidhance_settings_getMotion(settings);
+```
+Then we can alter a setting for this settings object:
+```
+vidhance_motion_settings_setComplexity(motionSettings, 3);
+```
+Finally we create the Vidhance context with the base settings object:
+```
+context = vidhance_context_new(settings);
+```
+
+# Running
+1. Make sure you have successfully executed the *setup_device.sh* script so the backend library and the Vidhance library exist on the device. (See [Preparing phone for wrapper](./android/gettingstarted#PreparingPhoneForWrapper))
+2. Build your implementation. (See [Building](./android/gettingstarted#Building))
+3. Push the wrapper to the device. (See [Pushing to phone](./android/gettingstarted#PushingToPhone))
+4. When the device has rebooted you can use any camera app on the device to view your results.
