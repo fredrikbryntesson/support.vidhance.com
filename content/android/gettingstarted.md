@@ -217,6 +217,7 @@ kean_draw_gpu_android_graphicBuffer_registerCallbacks(
   lockGraphicBuffer,
   unlockGraphicBuffer);
 ```
+<a name="DebugPrint"></a>
 ### Debug print
 If you want debug output from Vidhance you can register a print callback. A default function that prints to logcat is located in the vidhance folder but you are free to use your own.
 ```
@@ -298,3 +299,20 @@ context = vidhance_context_new(settings);
 2. Build your implementation. (See [Building](./android/gettingstarted#Building))
 3. Push the wrapper to the device. (See [Pushing to phone](./android/gettingstarted#PushingToPhone))
 4. When the device has rebooted you can use any camera app on the device to view your results.
+
+# Troubleshooting
+It is recommended to use the debug version of the Vidhance library while in development. This can be downloaded when running the *download_vidhance.sh* script. The debug version includes useful print output which can be captured by configuring the debugPrint callback to a function of your choice (see [Debug print](./android/gettingstarted#DebugPrint)).
+
+## Using DDMS
+The default callback for output is located in *vidhance/debug/Debug.h* and will print the output to Android's logging system Logcat. This output can be captured by using DDMS (Dalvik Debug Monitor Server) which is included in the Android-SDK. Follow these steps:
+
+1. Download Android-SDK [here](http://developer.android.com/sdk/index.html)
+2. Run *ddms* located in *android-sdks/tools*
+3. Make sure your device is connected by USB and with USB debugging enabled. You should see your device listed in the DDMS window.
+4. Create a new filter with these settings:
+
+  + *Filter Name:* Vidhance
+  + *by Log Tag:* Vidhance
+  + *by Log Level:* verbose
+  + Leave the rest blank.
+5. You should now get output to the filter from the Vidhance library when your device is capturing video.
