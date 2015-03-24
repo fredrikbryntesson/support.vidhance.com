@@ -13,6 +13,7 @@ This section will describe how to integrate Vidhance by wrapping the camera driv
 # Prerequisites
 + We recommend using a computer with Ubuntu 14.04
 + Android device with root access
++ Camera HAL version 3.0 or 3.2 (support for 1.0 coming soon)
 
 # Setting up device
 ## Enabling USB debugging
@@ -89,6 +90,17 @@ We recommend that you modify the example implementation for Nexus 6 to create a 
 ## Android dependencies
 The camera wrapper depends on libraries found in the Android source tree. We have provided the needed headers and libraries for Nexus 6 which should be compatible with any 32-bit ARM-based device running Android 5.0.1. The headers can be found in the *include* folder and the libraries in the *libs* folder. If your device uses a different architecture or Android version you may need to replace these libraries with ones compatible with your device. Contact us if you need help with this matter.
 
+## Determining HAL version
+You need to know which HAL version your original library has implemented to choose the correct wrapper. Query the device with:
+```sh
+adb shell dumpsys | grep "Device version:"
+```
+The result should be something like:
+```
+Device version: 0x302
+```
+where the most significant digit is the major version number and the two least significant digits are the minor version number. In the above example the original HAL is therefore of version 3.2. Note that Vidhance SDK currently only supports HAL version 3.0 and 3.2 but support for older versions will be available soon.
+
 ## Configuring Android makefiles
 ### Android.mk
 Inside the Nexus 6 folder you can find Android.mk which is used as a makefile when building with ndk-build. We provide wrapper implementations for a number of camera HAL versions. You need to edit the makefile to use the sources for the HAL version you intend to use with your device. In the example Android.mk you will see the sources from HAL 3.2 included in the makefile. Simply change the folder to the correct version.
@@ -108,16 +120,19 @@ In this file you can specify which Android API level you are building for. A com
 ## Changes in source code
 The VidhanceProcessor implementation in the nexus6 folder is an example of how to use the camera wrapper implementation in combination with the Vidhance library. You need some minor modifications before you start building.
 
+### Include correct VideoProcessor header
 Make sure the correct VideoProcessor header for your HAL version is included in VidhanceProcessor.h.
 ```
 #include "../hal3.2/VideoProcessor.h"
 ```
+
+### Configure GraphicBuffer
 Vidhance uses Android's *GraphicBuffer* class to allocate buffer memory. To maximize performance, Vidhance needs to be provided with a list of widths that are aligned in memory, i.e. no padding is used. This is device-specific and needs to be explicitly provided to Vidhance. The list should contain aligned widths in bytes for GraphicBuffers allocated with format *HAL_PIXEL_FORMAT_RGBA_8888*. Example array for Nexus 6:
 ```
 const int alignedWidth[ALIGNED_WIDTH_COUNT] = { 32 * 4, 64 * 4, 96 * 4,
   128 * 4, 256 * 4, 384 * 4, 640 * 4, 768 * 4, 896 * 4, 1152 * 4 };
 ```
-If you wish to skip this step you can simply provide an empty array, however this will cause a significant drop in performance.
+If you wish to skip this step for now, leave the array empty or as in the example. The array will optionally be provided to Vidhance later in the guide but it is not required. This will however cause a significant drop in performance so it should be configured at some point.
 
 <a name="Building"></a>
 # Building
@@ -295,13 +310,22 @@ context = vidhance_context_new(settings);
 ```
 
 # Running
+## Instructions
 1. Make sure you have successfully executed the *setup_device.sh* script so the backend library and the Vidhance library exist on the device. (See [Preparing phone for wrapper](./android/gettingstarted#PreparingPhoneForWrapper))
 2. Build your implementation. (See [Building](./android/gettingstarted#Building))
 3. Push the wrapper to the device. (See [Pushing to phone](./android/gettingstarted#PushingToPhone))
 4. When the device has rebooted you can use any camera app on the device to view your results.
 
+## What to expect
+If you have successfully built and pushed the correct files to your device you should be able to notice modifications in both the preview and captured video. If you used the default settings when creating the Vidhance context you can expect to see the following:
+
++ The preview should have a clearly visible viewfinder
++ The captured video should be stabilized with a cleary visible motion trace in the lower right corner
+
+If your result is not as expected you can proceed to the next chapter or contact our support via the chat widget on this page.
+
 # Troubleshooting
-It is recommended to use the debug version of the Vidhance library while in development. This can be downloaded when running the *download_vidhance.sh* script. The debug version includes useful print output which can be captured by configuring the debugPrint callback to a function of your choice (see [Debug print](./android/gettingstarted#DebugPrint)).
+It is recommended to use the debug version of the Vidhance library while in development. Version can be selected when running the *download_vidhance.sh* script. The debug version includes useful print output which can be captured by configuring the debugPrint callback to a function of your choice (see [Debug print](./android/gettingstarted#DebugPrint)).
 
 ## Using DDMS
 The default callback for output is located in *vidhance/debug/Debug.h* and will print the output to Android's logging system Logcat. This output can be captured by using DDMS (Dalvik Debug Monitor Server) which is included in the Android-SDK. Follow these steps:
@@ -316,3 +340,10 @@ The default callback for output is located in *vidhance/debug/Debug.h* and will 
   + *by Log Level:* verbose
   + Leave the rest blank.
 5. You should now get output to the filter from the Vidhance library when your device is capturing video.
+6. If you have problems with crashes it can be helpful to get the backtrace from the device. Create another filter with these settings:
+
+  + *Filter Name:* Debug
+  + *by Log Tag:* DEBUG
+  + *by Log Level:* verbose
+  + Leave the rest blank.
+7. When the device crashes you can check the backtrace in the debug filter for useful information.
