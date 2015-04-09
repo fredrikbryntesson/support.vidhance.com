@@ -123,20 +123,50 @@ The VidhanceProcessor implementation in the nexus6 folder is an example of how t
 ### Include correct VideoProcessor header
 Make sure the correct VideoProcessor header for your HAL version is included in VidhanceProcessor.h.
 ```
+/* VidhanceProcessor.h */
 #include "../hal3.2/VideoProcessor.h"
 ```
 
 ### Configure GraphicBuffer
-Vidhance uses Android's *GraphicBuffer* class to allocate buffer memory. To maximize performance, Vidhance needs to be provided with a list of widths that are aligned in memory, i.e. no padding is used. This is device-specific and needs to be explicitly provided to Vidhance. The list should contain aligned widths in bytes for GraphicBuffers allocated with format *HAL_PIXEL_FORMAT_RGBA_8888*. Example array for Nexus 6:
+Vidhance uses Android's *GraphicBuffer* class to allocate buffer memory. To maximize performance, Vidhance needs to be provided with a list of widths that are aligned in memory, i.e. no padding is used. This is device-specific and needs to be explicitly provided to Vidhance. The list should contain aligned widths in bytes for GraphicBuffers allocated with format *HAL_PIXEL_FORMAT_RGBA_8888*.
+
+#### Option 1
+You can use the function *getAlignedWidth()* located in *vidhance/graphicbuffer/GraphicBufferWrapper.h* to check the values for your device:
 ```
-const int alignedWidth[ALIGNED_WIDTH_COUNT] = { 32 * 4, 64 * 4, 96 * 4,
-  128 * 4, 256 * 4, 384 * 4, 640 * 4, 768 * 4, 896 * 4, 1152 * 4 };
+/* VidhanceProcessor.cpp */
+#include "../vidhance/graphicbuffer/GraphicBufferWrapper.h"
+
+vidhance_context* context = NULL;
+VidhanceProcessor::VidhanceProcessor(const char* cameraId) :
+		VideoProcessor(cameraId) {
+	if (context == NULL) {
+		aligned_width alignedWidth = getAlignedWidth();
+		kean_draw_gpu_android_graphicBuffer_configureAlignedWidth(&alignedWidth.width[0], alignedWidth.count);
+	}
+}
 ```
-If you wish to skip this step for now, leave the array empty or as in the example. The array will optionally be provided to Vidhance later in the guide but it is not required. This will however cause a significant drop in performance so it should be configured at some point.
+#### Option 2 (Recommended)
+Option 1 should only be used to get started if you do not know the values for your device since it will slow down the initialization. The function will return the values and print the aligned widths to Logcat under the log tag *GraphicBufferWrapper* (See [Using DDMS](./android/gettingstarted#UsingDDMS) for instructions). Use this output to create a predefined array with values. Example for Nexus 6:
+```
+/* VidhanceProcessor.cpp */
+
+/* Predefined aligned width in bytes for RGBA8888 GraphicBuffers on Nexus 6 */
+#define ALIGNED_WIDTH_COUNT 10
+const int alignedWidth[ALIGNED_WIDTH_COUNT] =
+{ 128, 256, 384, 512, 1024, 1536, 2560, 3072, 3584, 4608 };
+
+vidhance_context* context = NULL;
+VidhanceProcessor::VidhanceProcessor(const char* cameraId) :
+		VideoProcessor(cameraId) {
+	if (context == NULL) {
+		kean_draw_gpu_android_graphicBuffer_configureAlignedWidth(&alignedWidth[0], ALIGNED_WIDTH_COUNT);
+	}
+}
+```
 
 <a name="Building"></a>
 # Building
-The make.sh script is an example of how to use ndk-build to build the sources. You are of course free to use your toolchain of choice. The build should generate libcamera_wrapper.so.
+The *make.sh* script is an example of how to use ndk-build to build the sources. You are of course free to use your toolchain of choice. The build should generate *libcamera_wrapper.so*.
 
 <a name="PreparingPhoneForWrapper"></a>
 # Preparing phone for wrapper
@@ -150,6 +180,8 @@ adb pull /system/lib/hw/camera.msm8084.so <path on your computer>
 
 First take a look at the setup_device.sh script which demonstrates how to create the backend library from the default HAL implementation. Make sure you set the *CAMERA_HAL* variable to the name of your original library. The script also pushes the Vidhance library to the phone so make sure you have downloaded it and specified the correct path to it in the script. Once the script has completed you don't have to run it unless you reinstall Android on your phone or simply want to push a newer version of the Vidhance library.
 ```
+#setup_device.sh
+
 #!/bin/bash
 CAMERA_HAL=camera.msm8084.so
 VIDHANCE_PATH=./libs/libvidhance_android32.so
@@ -165,7 +197,7 @@ echo "Creating camera backend library..."
 WRAPPER_OUTPUT=$(adb shell ls /system/lib/hw/camera_backend.so)
 if [[ $WRAPPER_OUTPUT == *"No such file or directory"* ]]
 then
-	echo "Successfully Created camera backend library."
+	echo "Successfully created camera backend library."
 	adb shell cp /system/lib/hw/$CAMERA_HAL /system/lib/hw/camera_backend.so
 else
 	echo "Camera backend library already exists. Skipping."
@@ -188,14 +220,20 @@ adb reboot
 # Pushing to phone
 Every time you have rebuilt the wrapper library you can use the push.sh script to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library.
 ```
+#push.sh
+
 #!/bin/bash
 CAMERA_HAL=camera.msm8084.so
 WRAPPER_PATH=./libs/armeabi-v7a/libcamera_wrapper.so
 
 OUTPUT=$(adb shell ls /system/lib/hw/$CAMERA_HAL)
+OUTPUT_WRAPPER=$(adb shell ls /system/lib/hw/camera_backend.so)
 if [[ $OUTPUT == *"No such file or directory"* ]]
 then
 	echo "Couldn't find" $CAMERA_HAL "on the device. Are you using the correct filename?"
+elif [[ $OUTPUT_WRAPPER == *"No such file or directory"* ]]
+then
+	echo "Couldn't find camera_backend.so on the device. Make sure to run the setup_device.sh script before overwriting" $CAMERA_HAL
 else
 	echo Overwriting $CAMERA_HAL ...
 	echo "Waiting for device to go online..."
@@ -205,7 +243,6 @@ else
 	echo "Waiting for device to go online..."
 	adb wait-for-device
 	adb shell mount -o remount,rw /system
-	adb shell rm -f /system/lib/hw/$CAMERA_HAL
 	adb push  $WRAPPER_PATH /system/lib/hw/$CAMERA_HAL
 	adb reboot
 fi
@@ -326,7 +363,7 @@ If your result is not as expected you can proceed to the next chapter or contact
 
 # Troubleshooting
 It is recommended to use the debug version of the Vidhance library while in development. Version can be selected when running the *download_vidhance.sh* script. The debug version includes useful print output which can be captured by configuring the debugPrint callback to a function of your choice (see [Debug print](./android/gettingstarted#DebugPrint)).
-
+<a name="UsingDDMS"></a>
 ## Using DDMS
 The default callback for output is located in *vidhance/debug/Debug.h* and will print the output to Android's logging system Logcat. This output can be captured by using DDMS (Dalvik Debug Monitor Server) which is included in the Android-SDK. Follow these steps:
 
