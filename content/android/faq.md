@@ -16,6 +16,12 @@ Yes, any video stabilization solution requires a smaller field of view in the re
 
 The quick integration method applied means that the software to a large extent is hardware agnostic. The first successful integrations have been done on various Qualcomm and Nvidia chipsets. After a first successful integration, further hardware specific optimizations and adjustments can be made to further improve performance and quality.
 
+Vidhance should work on most high-end SoCs such as the following:
+
+* Qualcomm Snapdragon 800 (Quad-core 2.3 GHz Krait 400, Adreno 330)
+* Qualcomm Snapdragon 805 (Quad-core 2.7 GHz Krait 450, Adreno 420)
+* Nvidia Tegra 3 (Quad-core 1.2 GHz Cortext-A9)
+
 ## What video resolutions and frame rates are supported?
 
 Vidhance is adjustable to any video resolution. Obviously, the larger the resolution, the better the image computational capacity of the hardware needs to be dimensioned. However, the processor load for the core motion analysis algorithms does not scale proportional to increased video resolution, so it is more a question on efficient image data transfers.
