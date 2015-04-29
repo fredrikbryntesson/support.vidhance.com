@@ -20,7 +20,7 @@ Vidhance should work on most high-end SoCs such as the following:
 
 * Qualcomm Snapdragon 800 (Quad-core 2.3 GHz Krait 400, Adreno 330)
 * Qualcomm Snapdragon 805 (Quad-core 2.7 GHz Krait 450, Adreno 420)
-* Nvidia Tegra 3 (Quad-core 1.2 GHz Cortext-A9)
+* Nvidia Tegra 3 (Quad-core 1.2 GHz Cortex-A9)
 
 ## What video resolutions and frame rates are supported?
 
