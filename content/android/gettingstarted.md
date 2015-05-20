@@ -13,7 +13,7 @@ This section will describe how to integrate Vidhance by wrapping the camera driv
 # Prerequisites
 + We recommend using a computer with Ubuntu 14.04
 + Android device with root access
-+ Camera HAL version 3.0 or 3.2 (support for 1.0 coming soon)
++ Camera HAL version 1.0, 3.0 or 3.2
 
 # Setting up device
 ## Enabling USB debugging
@@ -103,16 +103,17 @@ where the most significant digit is the major version number and the two least s
 
 ## Configuring Android makefiles
 ### Android.mk
-Inside the Nexus 6 folder you can find Android.mk which is used as a makefile when building with ndk-build. We provide wrapper implementations for a number of camera HAL versions. You need to edit the makefile to use the sources for the HAL version you intend to use with your device. In the example Android.mk you will see the sources from HAL 3.2 included in the makefile. Simply change the folder to the correct version.
+Inside the Nexus 6 folder you can find Android.mk which is used as a makefile when building with ndk-build. We provide wrapper implementations for a number of camera HAL versions. You need to edit the makefile to use the sources for the HAL version you intend to use with your device. In the example Android.mk you will see the sources from HAL 3 included in the makefile. Simply change the folder to the correct version.
 ```
 LOCAL_SRC_FILES := \
-    ../hal3.2/VidhanceWrapperHAL.cpp \
-    ../hal3.2/VidhanceWrapperFactory.cpp \
-    ../hal3.2/VidhanceWrapper.cpp \
-    ../hal3.2/StreamMonitor.cpp \
-    ../hal3.2/VideoProcessor.cpp \
+    ../HAL/CameraHAL.cpp \
+    ../HAL/CameraWrapper.cpp \
+    ../HAL/CameraWrapperFactory.cpp \
+    ../HAL/HAL3/CameraHALWrapper.cpp \
+    ../HAL/HAL3/VideoProcessor.cpp \
     ../vidhance/rotation_sensor/SensorReader.cpp \
     VidhanceProcessor.cpp \
+LOCAL_CFLAGS += -DHAVE_PTHREADS -DHAL_3_2
 ```
 ### Application.mk
 In this file you can specify which Android API level you are building for. A complete list can be found [here](https://source.android.com/source/build-numbers.html).
@@ -124,7 +125,7 @@ The VidhanceProcessor implementation in the nexus6 folder is an example of how t
 Make sure the correct VideoProcessor header for your HAL version is included in VidhanceProcessor.h.
 ```
 /* VidhanceProcessor.h */
-#include "../hal3.2/VideoProcessor.h"
+#include "../HAL/HAL3/VideoProcessor.h"
 ```
 
 ### Configure GraphicBuffer
@@ -185,34 +186,7 @@ First take a look at the setup_device.sh script which demonstrates how to create
 #!/bin/bash
 CAMERA_HAL=camera.msm8084.so
 VIDHANCE_PATH=./libs/libvidhance_android32.so
-
-echo "Waiting for device to go online..."
-adb wait-for-device
-adb root
-sleep 2
-echo "Waiting for device to go online..."
-adb wait-for-device
-adb shell mount -o remount,rw /system
-echo "Creating camera backend library..."
-WRAPPER_OUTPUT=$(adb shell ls /system/lib/hw/camera_backend.so)
-if [[ $WRAPPER_OUTPUT == *"No such file or directory"* ]]
-then
-	echo "Successfully created camera backend library."
-	adb shell cp /system/lib/hw/$CAMERA_HAL /system/lib/hw/camera_backend.so
-else
-	echo "Camera backend library already exists. Skipping."
-fi
-
-if [ ! -f $VIDHANCE_PATH ]
-then
-	echo "Couldn't find Vidhance library at" $VIDHANCE_PATH
-	echo "Have you downloaded the library and specified the correct path in the script?"
-else
-	echo "Pushing Vidhance library..."
-	adb push $VIDHANCE_PATH /system/lib/
-fi
-
-adb reboot
+../scripts/setup_device.sh $CAMERA_HAL $VIDHANCE_PATH
 
 ```
 
@@ -225,27 +199,7 @@ Every time you have rebuilt the wrapper library you can use the push.sh script t
 #!/bin/bash
 CAMERA_HAL=camera.msm8084.so
 WRAPPER_PATH=./libs/armeabi-v7a/libcamera_wrapper.so
-
-OUTPUT=$(adb shell ls /system/lib/hw/$CAMERA_HAL)
-OUTPUT_WRAPPER=$(adb shell ls /system/lib/hw/camera_backend.so)
-if [[ $OUTPUT == *"No such file or directory"* ]]
-then
-	echo "Couldn't find" $CAMERA_HAL "on the device. Are you using the correct filename?"
-elif [[ $OUTPUT_WRAPPER == *"No such file or directory"* ]]
-then
-	echo "Couldn't find camera_backend.so on the device. Make sure to run the setup_device.sh script before overwriting" $CAMERA_HAL
-else
-	echo Overwriting $CAMERA_HAL ...
-	echo "Waiting for device to go online..."
-	adb wait-for-device
-	adb root
-	sleep 2
-	echo "Waiting for device to go online..."
-	adb wait-for-device
-	adb shell mount -o remount,rw /system
-	adb push  $WRAPPER_PATH /system/lib/hw/$CAMERA_HAL
-	adb reboot
-fi
+../scripts/push.sh $CAMERA_HAL $WRAPPER_PATH
 
 ```
 # Using the Vidhance API
@@ -301,22 +255,21 @@ if (context == NULL)
 }
 ```
 ## Processing frames
-The VidhanceProcessor contains one callback for video capture buffers and one for preview buffers. To feed a frame to the Vidhance context, an image structure needs to be created from some of the properties of the GraphicBuffer parameter. The structure needs to know how the data in the buffer is aligned in memory. For example, for Nexus 6 the width of the frame will be padded to 64 byte alignment and the height to 32 byte alignment.
+The VidhanceProcessor contains one callback for video capture buffers and one for preview buffers. To feed a frame to the Vidhance context, an image object needs to be created from some of the properties of the GraphicBuffer parameter. The object needs to know how the data in the buffer is aligned in memory. For example, for Nexus 6 the width of the frame will be padded to 64 byte alignment and the height to 32 byte alignment.
 
-The image structure can then be passed to one of the process functions. The first argument will be used as input buffer and the second argument will be used as output buffer where the result is written. It is currently recommended to use the same buffer as input and output.
+The image structure can then be passed to one of the process functions. The first argument will be used as input buffer and the second argument will be used as output buffer where the result is written.
 ```
-void VidhanceProcessor::processVideoCapture(GraphicBuffer* graphicBuffer) {
-    kean_draw_gpu_android_graphicBufferYuv420Semiplanar* image =
-    kean_draw_gpu_android_graphicBufferYuv420Semiplanar_new(
-      (void*) graphicBuffer,
-      (void*) graphicBuffer->getNativeBuffer(),
-      (void*) graphicBuffer->handle,
-      kean_math_intSize2D_new(graphicBuffer->width, graphicBuffer->height),
-      graphicBuffer->getStride(),
-      graphicBuffer->format,
-      64, /* Width byte alignment */
-      32); /* Height byte alignment */
-    vidhance_context_process(context, (kean_draw_image*) image, (kean_draw_image*) image);
+void VidhanceProcessor::processVideoCapture(sp<GraphicBuffer> input, sp<GraphicBuffer> output) {
+	int horizontalStride = ALIGN(input->width, 64);
+	int verticalStride = ALIGN(input->height, 32);
+	int uvOffset = horizontalStride * verticalStride;
+	kean_draw_gpu_android_graphicBufferYuv420Semiplanar* inputImage = kean_draw_gpu_android_graphicBufferYuv420Semiplanar_new((void*)input.get(),
+			(void*)input->getNativeBuffer(), (void*) input->handle,
+			kean_math_intSize2D_new(input->width, input->height), horizontalStride, input->format, uvOffset);
+	kean_draw_gpu_android_graphicBufferYuv420Semiplanar* outputImage = kean_draw_gpu_android_graphicBufferYuv420Semiplanar_new((void*)output.get(),
+			(void*)output->getNativeBuffer(), (void*) output->handle,
+			kean_math_intSize2D_new(output->width, output->height), horizontalStride, output->format, uvOffset);
+	vidhance_context_process(context, (kean_draw_image*) inputImage, (kean_draw_image*) outputImage);
 }
 ```
 
