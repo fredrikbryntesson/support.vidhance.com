@@ -8,8 +8,8 @@ menu:
     name: "validate"
 ---
 
-Examples of requirement and test specifications for Vidhance Mobile Stabilization.
+Templates for requirement and test specifications for Vidhance Mobile Stabilization.
 
-[Requirement specification](./android/validate/requirements/index.html)
+[Requirement Specification Template](./android/validate/requirements/index.html)
 
-[Test specification](hej.html)
+[Test Specification Template](./android/validate/tests/index.html)
