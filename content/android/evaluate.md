@@ -9,7 +9,7 @@ menu:
 ---
 
 # Introduction
-This section describes how to download and flash the files necessary to evaluate Vidhance Mobile on a Nexus 6 device.
+This section describes how to download and flash the files necessary to evaluate Vidhance Mobile on a Nexus 6 device with Android 5.1.
 
 # Prerequisites
 ## PC
