@@ -7,6 +7,10 @@ menu:
     weight: 10
     name: "evaluate"
 ---
+
+# Introduction
+This section describes how to download and flash the files necessary to evaluate Vidhance Mobile on a Nexus 6 device.
+
 # Prerequisites
 ## PC
 We recommend using a Ubuntu 14.04 LTS. You will need to install ADB and fastboot:
@@ -48,7 +52,9 @@ sudo apt-get install phablet-tools
     ```
 and you should be asked to allow USB debugging (see step 6).
 
-### Booting device into bootloader
+# Rooting
+Skip this step if you already have a rooted version of Android 5.1 on the device and continue to **Installing Vidhance**.
+## Booting device into bootloader
 1. Use ADB to reboot the device into the bootloader:
 
     ```sh
@@ -60,19 +66,27 @@ and you should be asked to allow USB debugging (see step 6).
     fastboot oem unlock
     ```
 
-### Installing rooted Android
+## Flash rooted boot image
 1. Run the script for flashing Android:
 
     ```sh
-    ./flash_android.sh
+    . flash_android.sh
     ```
-2. Wait for the flash to complete.
+2. Wait for the phone to reboot.
 
-### Installing Vidhance mobile
+<br>
+
+# Installing Vidhance
 1. Run the script for flashing Vidhance:
 
     ```sh
-    ./flash_vidhance.sh
+    . flash_vidhance.sh
     ```
+2. Wait for the phone to reboot.
 
-# Running Vidhance
+# Running
+1. Start the default camera application.
+2. Switch to video capture.
+3. You should see a viewfinder in the preview representing the area that will be captured in the video.
+4. Start recording.
+5. The resulting video should be stabilized and contain an Imint logotype and a trace showing the stabilization for the x and y axes.
