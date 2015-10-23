@@ -1,3 +1,5 @@
-baseurl = "http://support.vidhance.com/"
+BaseURL = "http://support.vidhance.com/"
 languageCode = "en-us"
 title = "Vidhance Support"
+MetaDataFormat = "toml"
+theme = "hugo-vidhance-theme"

@@ -1,0 +1,3 @@
+[submodule "themes/hugo-vidhance-theme"]
+	path = themes/hugo-vidhance-theme
+	url = https://github.com/vidhance/hugo-vidhance-theme
