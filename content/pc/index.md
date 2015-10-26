@@ -6,7 +6,10 @@ menu:
     name: pc
 ---
 # Download the Vidhance library
+To download the Vidhance SDK library you need a key which you can use on [this page](/pc/download).
 # Using the Vidhance API
+## Complete code examples
+There are complete code examples available [here](https://github.com/vidhance/example-vidhance-pc-cpp-stabilize-track) for running Vidhance with stabilizer and tracker.
 ## Initializing and creating creating a Vidhance context
 Before you can use the Vidhance API you need to initialize it by calling the load function:
 ```c++
@@ -66,5 +69,3 @@ tracker = vidhance_tracker_start(tracker, startRegion);
 vidhance_frame = vidhance_context_process(context, input);
 kean_math_floatBox2D tracker_bounds = vidhance_tracker_instance_getBounds(tracker);
 ```
-## Complete code examples
-There are complete code examples available [here](https://github.com/vidhance/example-vidhance-pc-cpp-stabilize-track) for running Vidhance with stabilizer and tracker.
