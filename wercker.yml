@@ -1,6 +1,10 @@
 box: wercker/default
 build:
   steps:
+    - script:
+        name: initialize git submodules
+        code: |
+            git submodule update --init --recursive
     - arjen/hugo-build:
         version: "0.14"
 deploy:

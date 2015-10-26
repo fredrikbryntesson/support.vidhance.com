@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+<head>{{ partial "head.html" . }}</head>
+<body id="inner-wrap">
+	<header id="top">{{ partial "header.html" . }}</header>
+	<nav id="nav">
+		<div class="block">
+			{{ partial "menu.html" .Site.Menus.main }}
+			<a id="nav-close-btn" class="close-btn" href="#top">Return to Content</a>
+		</div>
+	</nav>
+	<main>
+		<section>
+			{{ range .Site.Sections.start.Pages.ByWeight }}
+				{{ partial "article.html" . }}
+			{{ end }}
+		</section>
+	</main>
+	<footer>{{ partial "footer.html" . }}</footer>
+	{{ partial "foot.html" . }}
+</body>
+</html>
