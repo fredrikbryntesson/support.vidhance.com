@@ -1,2 +1,10 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
+<script>
+$('#downloadForm').on('submit', function(e) {
+	key = $("input:first").val();
+	url = "https://aurora.imint.se/data/"+key+"/vidhance-sdk-pc/vidhance_0.7.0_32bit.zip";
+	$('#hiddenIFrame').attr("src", url);
+	return false;
+});
+</script>
