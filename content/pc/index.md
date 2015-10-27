@@ -65,7 +65,7 @@ This is an example of how to process a frame and retrieve the tracker bounds fro
 ```c++
 vidhance_motion motion = vidhance_context_getMotion(context);
 vidhance_tracker tracker = vidhance_motion_getTracker(motion);
-tracker = vidhance_tracker_start(tracker, startRegion);
-vidhance_frame = vidhance_context_process(context, input);
-kean_math_floatBox2D tracker_bounds = vidhance_tracker_instance_getBounds(tracker);
+vidhance_tracker_instance tracker_instance = vidhance_tracker_start(tracker, startRegion);
+vidhance_frame frame = vidhance_context_process(context, input);
+kean_math_floatBox2D tracker_bounds = vidhance_tracker_instance_getBounds(tracker_instance);
 ```
