@@ -56,17 +56,7 @@ sudo apt-get install phablet-tools
 You will need `ndk-build`, located in the Android NDK, to build the sources for your device.
 
 1. Download the installer [here](https://developer.android.com/ndk/downloads/index.html)
-2. Open a terminal in the directory the file was installed.
-3. Set execution rights on the binary
-
-    ```sh
-    chmod a+x android-ndk-r10d-linux-x86_64.bin
-    ```
-
-4. Run the binary
-
-    ```sh
-    ./android-ndk-r10d-linux-x86_64.bin
+2. Unpack the files into a path of your choice.
     ```
 
 ## Downloading wrapper sources
@@ -83,20 +73,29 @@ The repository can then be cloned from github:
 git clone https://github.com/vidhance/android-camera-wrapper
 ```
 
-## Downloading Vidhance library
-In the `android-camera-wrapper/nexus6p` folder, you will find *setup.sh*. Give this file execution rights, and run it:
+## Setting up help functions
+In the `android-camera-wrapper/nexus6p` folder, you will find the script *setup.sh*. You need to set the correct paths and names in this file in order for the script to work. The following information is needed:
+* The name of the camera HAL library on your device (camera.msm8994.so on Nexus 6P)
+* The path to where your wrapper library will be located once you build it (leave it as it is if you are unsure)
+* The path to where the Android NDK is located
+* The path to where the Vidhance binary is located (leave it as it is if you are unsure)
+
+When the valid paths are set, run the script:
+
 ```sh
-chmod a+x download_vidhance.sh
-./download_vidhance.sh
+. setup.sh
 ```
 
-This script exports the function `download_vidhance()`, which you can then enter into the terminal. Enter your key to start downloading.
+You now have access to a number of help functions listed in the terminal.
+
+## Downloading Vidhance library and Android dependencies
+Run the function `download_vidhance` in the terminal. Enter your key to start downloading.
 
 # Configuring for your device
 We recommend that you modify the example implementation for Nexus 6P to create a compatible version for your device.
 
 ## Android dependencies
-The camera wrapper depends on libraries found in the Android source tree. We have provided the needed headers and libraries for Nexus 6P which should be compatible with any 32-bit ARM-based device running Android 5.0.1. The headers can be found in the *include* folder and the libraries in the *libs* folder. **TODO: Var är de?** If your device uses a different architecture or Android version, you may need to replace these libraries with ones compatible with your device. Contact us if you need help with this matter.
+The camera wrapper depends on libraries found in the Android source tree. We have provided the needed headers and libraries for Nexus 6P which should be compatible with any 32-bit ARM-based device running Android 6.0. The headers can be found in the *include* folder and the libraries in the *libs* folder. The files are downloaded when running the *download_vidhance* function. If your device uses a different architecture or Android version, you may need to replace these libraries with ones compatible with your device. Contact us if you need help with this matter.
 
 ## Determining HAL version
 In order to choose the correct wrapper, you need to know which HAL version your original library has implemented. Query the device with:
@@ -107,22 +106,24 @@ The result should be something like:
 ```
 Device version: 0x302
 ```
-where the most significant digit is the major version number and the two least significant digits are the minor version number. In the above example the original HAL is therefore of version 3.2. Note that Vidhance SDK currently only supports HAL version 3.0 and 3.2 but support for older versions will be available soon. **TODO stämmer detta? Verkar finnas redan**
+where the most significant digit is the major version number and the two least significant digits are the minor version number. In the above example the original HAL is therefore of version 3.2.
 
 ## Configuring Android makefiles
 ### Android.mk
-Inside the Nexus 6P folder you can find `Android.mk` which is used as a makefile when building with `ndk-build`. We provide wrapper implementations for a number of camera HAL versions. You need to edit the makefile to use the sources for the HAL version you intend to use with your device. In the example `Android.mk` you will see the sources from HAL 3 included in the makefile. Simply change the folder to the correct version.
+Inside the Nexus 6P folder you can find `Android.mk` which is used as a makefile when building with `ndk-build`. We provide wrapper implementations for a number of camera HAL versions. You need to edit the makefile to use the sources for the HAL version you intend to use with your device. In the example `Android.mk` you will see the following configuration:
 ```
-LOCAL_SRC_FILES := \
-    ../HAL/CameraHAL.cpp \
-    ../HAL/CameraWrapper.cpp \
-    ../HAL/CameraWrapperFactory.cpp \
-    ../HAL/HAL3/CameraHALWrapper.cpp \
-    ../HAL/HAL3/VideoProcessor.cpp \
-    ../vidhance/rotation_sensor/SensorReader.cpp \
-    VidhanceProcessor.cpp \
-LOCAL_CFLAGS += -DHAVE_PTHREADS -DHAL_3_2
+#Android version
+ANDROID_VERSION_MAJOR=6
+ANDROID_VERSION_MINOR=0
+#Module API version
+MODULE_VERSION_MAJOR=2
+MODULE_VERSION_MINOR=4
+#Device API version
+DEVICE_VERSION_MAJOR=3
+DEVICE_VERSION_MINOR=3
 ```
+This means the library is compiled for Android 6.0, using Camera module API version 2.4 and Camera device API version 3.3 (also called Camera HAL version).
+
 ### Application.mk
 In this file you can specify which Android API level you are building for. A complete list can be found [here](https://source.android.com/source/build-numbers.html).
 
@@ -133,96 +134,40 @@ The `VidhanceProcessor` implementation in the Nexus 6P folder is an example of h
 Make sure the correct VideoProcessor header for your HAL version is included in VidhanceProcessor.h.
 ```
 /* VidhanceProcessor.h */
-#include "../HAL/HAL3/VideoProcessor.h"
-```
-
-### Configure GraphicBuffer
-Vidhance uses Android's *GraphicBuffer* class to allocate buffer memory. To maximize performance, Vidhance needs to be provided with a list of widths that are aligned in memory, i.e. no padding is used. This is device-specific and needs to be explicitly provided to Vidhance. The list should contain aligned widths in bytes for GraphicBuffers allocated with format *HAL_PIXEL_FORMAT_RGBA_8888*.
-
-#### Option 1 (Recommended)
-**TODO: Otestad**
-This function will return the values and print the aligned widths to `logcat` under the log tag *GraphicBufferWrapper* (see [Using DDMS](#UsingDDMS) for instructions). Use this output to create a predefined array with values. Example for Nexus 6: **TODO: Anpassa för Nexus 6P**
-```
-/* VidhanceProcessor.cpp */
-
-/* Predefined aligned width in bytes for RGBA8888 GraphicBuffers on Nexus 6 */
-#define ALIGNED_WIDTH_COUNT 10
-const int alignedWidth[ALIGNED_WIDTH_COUNT] =
-{ 128, 256, 384, 512, 1024, 1536, 2560, 3072, 3584, 4608 };
-
-vidhance_context* context = NULL;
-VidhanceProcessor::VidhanceProcessor(const char* cameraId) :
-		VideoProcessor(cameraId) {
-	if (context == NULL) {
-		kean_draw_gpu_android_graphicBuffer_configureAlignedWidth(&alignedWidth[0], ALIGNED_WIDTH_COUNT);
-	}
-}
-```
-
-#### Option 2
-**TODO: Otestad**
-This option should only be used to get started if you do not know the values for your device since it will slow down the initialization.
-
-You can use the function *getAlignedWidth()* located in *vidhance/graphicbuffer/GraphicBufferWrapper.h* to check the values for your device:
-```
-/* VidhanceProcessor.cpp */
-#include "../vidhance/graphicbuffer/GraphicBufferWrapper.h"
-
-vidhance_context* context = NULL;
-VidhanceProcessor::VidhanceProcessor(const char* cameraId) :
-		VideoProcessor(cameraId) {
-	if (context == NULL) {
-		aligned_width alignedWidth = getAlignedWidth();
-		kean_draw_gpu_android_graphicBuffer_configureAlignedWidth(&alignedWidth.width[0], alignedWidth.count);
-	}
-}
+#include "../HAL/HAL3/DoubleBufferVideoProcessor.h"
 ```
 
 <a name="Building"></a>
 # Building
-The *make.sh* script is an example of how to use `ndk-build` to build the sources. You are of course free to use your toolchain of choice. The build should generate *libcamera_wrapper.so*.
+The *build* function is an example of how to use `ndk-build` to build the sources. You are of course free to use your toolchain of choice. The build should generate *libcamera_wrapper.so*.
 
 <a name="PreparingPhoneForWrapper"></a>
 # Preparing phone for wrapper
-Before we can push the wrapper to the device we need to know the filename Android expects when loading the camera HAL. For example, for Nexus 5 it is *camera.hammerhead.so* and for Nexus 6 and Nexus 6P
-*camera.msm8084.so*. What we want to do is to rename the wrapper library to the expected filename and rename the actual HAL implementation to camera_backend.so so it can be loaded by the wrapper.
+Before we can push the wrapper to the device we need to know the filename Android expects when loading the camera HAL. For example, for Nexus 5 it is *camera.hammerhead.so* and for Nexus 6P
+*camera.msm8994.so*. What we want to do is to rename the wrapper library to the expected filename and rename the actual HAL implementation to *camera_backend.so* so it can be loaded by the wrapper.
 
 It is recommended to create a backup of the original HAL implementation if you somehow manage to delete it by mistake. You can pull the library from the device with `adb`:
 ```
-adb pull /system/lib/hw/camera.msm8084.so camera.msm8084_backup.so
+adb pull /system/lib/hw/camera.msm8994.so camera_backup.msm8994.so
 ```
 
-**TODO testa nedanför**
-
-First take a look at the `setup.sh` script which demonstrates how to create the backend library from the default HAL implementation. Make sure you set the *CAMERA_HAL* variable to the name of your original library. The script also pushes the Vidhance library to the phone so make sure you have downloaded it and specified the correct path to it in the script. Once the script has completed you don't have to run it unless you reinstall Android on your phone or simply want to push a newer version of the Vidhance library.
-```
-#setup_device.sh
-
-#!/bin/bash
-CAMERA_HAL=camera.msm8084.so
-VIDHANCE_PATH=./libs/libvidhance_android32.so
-../scripts/setup_device.sh $CAMERA_HAL $VIDHANCE_PATH
-```
+The function *setup_device* will create a copy of your camera HAL library on your device and rename it to *camera_backend.so*. It will also push the Vidhance library to the phone - so make sure you have downloaded it and specified the correct path to it in the setup.sh script. Once the function has completed you don't have to run it unless you reinstall Android on your phone or simply want to push a newer version of the Vidhance library.
 
 <a name="PushingToPhone"></a>
 # Pushing to phone
-Every time you have rebuilt the wrapper library you can use the push.sh script to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library.
-```
-#push.sh
-
-#!/bin/bash
-CAMERA_HAL=camera.msm8084.so
-WRAPPER_PATH=./libs/armeabi-v7a/libcamera_wrapper.so
-../scripts/push.sh $CAMERA_HAL $WRAPPER_PATH
-```
+Every time you have rebuilt the wrapper library you can use the push function to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library in the setup.sh script.
 
 # Using the Vidhance API
-**TODO: hela kapitlet otestat**
 
-Examine the *VidhanceProcessor* implementation in the Nexus 6P folder and use it as an example for how to integrate Vidhance for Android. Here is a more detailed description of the code:
+Examine the *CameraWrapper* implementation in the HAL folder and use it as an example for how to integrate Vidhance for Android. We recommend you do your own implementation in the VidhanceProcessor class however, since this is the place for platform specific code. Here is a more detailed description of the code using the Vidhance API:
 
 ## Initializing
-Before you can use the Vidhance API you need to initialize it by calling the load function:
+Start with including the header containing the Vidhance API:
+```
+#include "../vidhance/vidhance.h"
+```
+
+Before you can use the Vidhance API you need to initialize it by calling the global load function:
 ```
 vidhance_load();
 ```
@@ -253,67 +198,48 @@ kean_base_debug_registerCallback(debugPrint);
 ```
 
 ## Creating Vidhance context
-To create a context we first need to create settings for the context.
+To create a context we first need to create settings for the context. It is recommended to use the default settings until you have successfully built and pushed to the device.
 ```
-vidhance_settings* settings = vidhance_settings_new();
+vidhance_settings settings = vidhance_settings_new();
 ```
-If your device can provide rotational sensor data you should register the getRotationVector callback in the settings. Include the header in the vidhance folder and register the function pointer.
+If your device can provide gyro sensor data you should register a RotationSensor in the settings. Include the header in the vidhance folder and register the function pointer.
 ```
-#include "../vidhance/rotation_sensor/RotationSensor.h"
+#include "../vidhance/sensors/GyroReader.h"
 ```
 ```
-vidhance_settings_registerCallback(settings, getRotationVector);
+vidhance_motion_settings motionSettings = vidhance_settings_getMotion(settings);
+vidhance_motion_sensor_settings sensorSettings = vidhance_motion_settings_getSensor(motionSettings);
+vidhance_motion_sensor_gyro gyroSensor = vidhance_motion_sensor_gyro_new(GyroReader::getAngularVelocity, GyroReader::getInstance()->getSamplePeriod());
+vidhance_motion_sensor_rotation rotationSensor = vidhance_motion_sensor_rotation_new((vidhance_motion_sensor)gyroSensor);
+vidhance_motion_sensor_settings_setRotation(sensorSettings, rotationSensor);
 ```
-We can now create a vidhance context using the settings. It is recommended to store the context statically to prevent the need to construct it every time the camera starts.
+We can now create a vidhance context using the settings.
 ```
-vidhance_context* context = NULL;
-VidhanceProcessor::VidhanceProcessor(const char* cameraId) :
-		VideoProcessor(cameraId) {
-...
-if (context == NULL)
-  context = vidhance_context_new(settings);
-}
-```
-
-## Processing frames
-The VidhanceProcessor contains one callback for video capture buffers and one for preview buffers. To feed a frame to the Vidhance context, an image object needs to be created from some of the properties of the GraphicBuffer parameter. The object needs to know how the data in the buffer is aligned in memory. For example, for Nexus 6, the width of the frame will be padded to 64 byte alignment and the height to 32 byte alignment.
-
-The image structure can then be passed to one of the process functions. The first argument will be used as input buffer and the second argument will be used as output buffer where the result is written.
-```
-void VidhanceProcessor::processVideoCapture(sp<GraphicBuffer> input, sp<GraphicBuffer> output) {
-	int horizontalStride = ALIGN(input->width, 64);
-	int verticalStride = ALIGN(input->height, 32);
-	int uvOffset = horizontalStride * verticalStride;
-	kean_draw_gpu_android_graphicBufferYuv420Semiplanar* inputImage = kean_draw_gpu_android_graphicBufferYuv420Semiplanar_new((void*)input.get(),
-			(void*)input->getNativeBuffer(), (void*) input->handle,
-			kean_math_intSize2D_new(input->width, input->height), horizontalStride, input->format, uvOffset);
-	kean_draw_gpu_android_graphicBufferYuv420Semiplanar* outputImage = kean_draw_gpu_android_graphicBufferYuv420Semiplanar_new((void*)output.get(),
-			(void*)output->getNativeBuffer(), (void*) output->handle,
-			kean_math_intSize2D_new(output->width, output->height), horizontalStride, output->format, uvOffset);
-	vidhance_context_process(context, (kean_draw_image*) inputImage, (kean_draw_image*) outputImage);
-}
+vidhance_context context = vidhance_context_new(settings);
 ```
 
 ## Configuring settings
-It is recommended to use the default settings until you have successfully built and pushed to the device. The Vidhance API enables you to configure the settings of the different modules to optimize quality and performance for your device. Take a look in *vidhance.h* to see the available settings. As an example we will look at the motion settings:
+The Vidhance API enables you to configure the settings of the different modules to optimize quality and performance for your device. Take a look in *vidhance.h* to see the available settings. As an example we will look at the stabilization settings:
 
 ```
-/* Motion Settings */
-vidhance_motion_settings* vidhance_settings_getMotion(vidhance_settings* settings);
-void vidhance_motion_settings_setComplexity(vidhance_motion_settings* settings, int complexity);
-int vidhance_motion_settings_getComplexity(vidhance_motion_settings* settings);
-void vidhance_motion_settings_setMode(vidhance_motion_settings* settings, vidhance_motion_mode mode);
-vidhance_motion_mode vidhance_motion_settings_getMode(vidhance_motion_settings* settings);
+/* Motion stabilize settings */
+extern vidhance_stabilizer_settings vidhance_settings_getStabilize(const vidhance_settings settings);
+extern void vidhance_stabilizer_settings_setMode(vidhance_stabilizer_settings settings, vidhance_stabilizer_mode mode);
+extern vidhance_stabilizer_mode vidhance_stabilizer_settings_getMode(const vidhance_stabilizer_settings settings);
+extern void vidhance_stabilizer_settings_setShowTrace(vidhance_stabilizer_settings settings, bool showTrace);
+extern bool vidhance_stabilizer_settings_getShowTrace(const vidhance_stabilizer_settings settings);
+extern void vidhance_stabilizer_settings_setTargetScale(vidhance_stabilizer_settings settings, float targetScale);
+extern float vidhance_stabilizer_settings_getTargetScale(const vidhance_stabilizer_settings settings);
 ```
 
 First we need a reference to the motion settings from our base settings:
 ```
-vidhance_settings* settings = vidhance_settings_new();
-vidhance_motion_settings* motionSettings = vidhance_settings_getMotion(settings);
+vidhance_settings settings = vidhance_settings_new();
+vidhance_stabilizer_settings stabilizeSettings = vidhance_settings_getStabilize(settings);
 ```
 Then we can alter a setting for this settings object:
 ```
-vidhance_motion_settings_setComplexity(motionSettings, 3);
+vidhance_stabilizer_settings_setTargetScale(stabilizeSettings, 0.9f);
 ```
 Finally we create the Vidhance context with the base settings object:
 ```
@@ -322,28 +248,29 @@ context = vidhance_context_new(settings);
 
 # Running
 ## Instructions
-1. Make sure you have successfully executed the *setup_device.sh* script so the backend library and the Vidhance library exist on the device (see [Preparing phone for wrapper](#PreparingPhoneForWrapper)).
+1. Make sure you have successfully executed the *setup_device* function so the backend library and the Vidhance library exist on the device (see [Preparing phone for wrapper](#PreparingPhoneForWrapper)).
 2. Build your implementation (see [Building](#Building)).
 3. Push the wrapper to the device (see [Pushing to phone](#PushingToPhone)).
 4. When the device has rebooted you can use any camera app on the device to view your results.
 
 ## What to expect
-If you have successfully built and pushed the correct files to your device you should be able to notice modifications in both the preview and captured video. If you used the default settings when creating the Vidhance context you can expect to see the following:
+If you have successfully built and pushed the correct files to your device you should be able to notice modifications in the captured video. If you used the default settings when creating the Vidhance context you can expect to see the following:
 
-+ The preview should have a clearly visible viewfinder
-+ The captured video should be stabilized with a visible motion trace in the lower right corner
++ A Vidhance logo in the upper right corner
++ Version number in the bottom right corner
+
 
 If your result is not as expected you can proceed to the next chapter or contact our support via the chat widget on this page.
 
 # Troubleshooting
-It is recommended to use the debug version of the Vidhance library while in development. Any version can be selected when running the *download_vidhance.sh* script. The debug version includes useful print output which can be captured by configuring the `debugPrint` callback to a function of your choice (see [Debug print](#DebugPrint)).
+It is recommended to use the debug version of the Vidhance library while in development. Any version can be selected when running the *download_vidhance* script. The debug version includes useful print output which can be captured by configuring the `debugPrint` callback to a function of your choice (see [Debug print](#DebugPrint)).
 
-<a name="UsingDDMS"></a>
-## Using DDMS
-The default callback for output is located in *vidhance/debug/Debug.h* and will print the output to Android's logging system `logcat`. This output can be captured by using DDMS (Dalvik Debug Monitor Server) which is included in the Android SDK. Follow these steps:
+<a name="UsingMonitor"></a>
+## Using Monitor
+The default callback for output is located in *vidhance/debug/Debug.h* and will print the output to Android's logging system `logcat`. This output can be captured by using Monitor which is included in the Android SDK. Follow these steps:
 
 1. Download Android SDK [here](http://developer.android.com/sdk/index.html). We will only need the package listed under `SDK Tools Only`, but the full `Android Studio` package contains the SDK as well.
-2. Run *ddms* located in *android-sdks/tools*
+2. Run *monitor* located in *android-sdks/tools*
 3. Make sure your device is connected by USB and with USB debugging enabled. You should see your device listed in the DDMS window.
 4. Create a new filter with these settings:
 
