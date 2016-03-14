@@ -1,4 +1,4 @@
-[Back to API overview](./android/apireference/index.html)
+[Back to API overview](../../apireference/)
 # Creating and adjusting settings
 ## Overview
 ---

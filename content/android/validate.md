@@ -10,6 +10,6 @@ menu:
 
 Templates for requirement and test specifications for Vidhance Mobile Stabilization.
 
-[Requirement Specification Template](./android/validate/requirements/index.html)
+[Requirement Specification Template](../validate/requirements/)
 
-[Test Specification Template](./android/validate/tests/index.html)
+[Test Specification Template](../validate/tests/)

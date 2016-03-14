@@ -5,7 +5,7 @@ title: "Vidhance Mobile Test Specification"
 ***
 # 1 General
 ## 1.1 Identification
-This document acts as a template for the testing procedures that verifies Vidhance Mobile against the [requirement specification](./android/validate/requirements/index.html). A complete specification is produced in collaboration with the customer.
+This document acts as a template for the testing procedures that verifies Vidhance Mobile against the [requirement specification](../requirements/). A complete specification is produced in collaboration with the customer.
 ## 1.2 Revision history
 *revision 1* Emil Westergren 2015-05-26
 <br>

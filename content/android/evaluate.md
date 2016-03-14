@@ -20,7 +20,7 @@ sudo apt-get install phablet-tools
 
 ### Downloading files
 1. Create a folder
-2. Download the [download script](android/evaluate/download.sh) and run it inside the folder
+2. Download the [download script](download.sh) and run it inside the folder
 3. Enter your key to start downloading the necessary files
 
 ## Phone
@@ -73,8 +73,6 @@ Skip this step if you already have a rooted version of Android 5.1 on the device
     . flash_android.sh
     ```
 2. Wait for the phone to reboot.
-
-<br>
 
 # Installing Vidhance
 1. Run the script for flashing Vidhance:
