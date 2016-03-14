@@ -57,7 +57,6 @@ You will need `ndk-build`, located in the Android NDK, to build the sources for 
 
 1. Download the installer [here](https://developer.android.com/ndk/downloads/index.html)
 2. Unpack the files into a path of your choice.
-    ```
 
 ## Downloading wrapper sources
 To quickly get started with Vidhance SDK we provide a public repository containing code to wrap the camera HAL and examples of how to integrate Vidhance SDK for Nexus devices. This code can easily be modified to run on your device.
