@@ -75,6 +75,7 @@ git clone https://github.com/vidhance/android-camera-wrapper
 
 ## Setting up help functions
 In the `android-camera-wrapper/nexus6p` folder, you will find the script *setup.sh*. You need to set the correct paths and names in this file in order for the script to work. The following information is needed:
+
 * The name of the camera HAL library on your device (camera.msm8994.so on Nexus 6P)
 * The path to where your wrapper library will be located once you build it (leave it as it is if you are unsure)
 * The path to where the Android NDK is located
@@ -89,7 +90,7 @@ When the valid paths are set, run the script:
 You now have access to a number of help functions listed in the terminal.
 
 ## Downloading Vidhance library and Android dependencies
-Run the function `download_vidhance` in the terminal. Enter your key to start downloading.
+Run the function `download_vidhance` in the terminal. Follow the instructions to start downloading. You will need a key to authorize the download. This will supply you with a Vidhance binary and the needed headers and libraries to build the wrapper for your version of Android.
 
 # Configuring for your device
 We recommend that you modify the example implementation for Nexus 6P to create a compatible version for your device.
@@ -97,16 +98,19 @@ We recommend that you modify the example implementation for Nexus 6P to create a
 ## Android dependencies
 The camera wrapper depends on libraries found in the Android source tree. We have provided the needed headers and libraries for Nexus 6P which should be compatible with any 32-bit ARM-based device running Android 6.0. The headers can be found in the *include* folder and the libraries in the *libs* folder. The files are downloaded when running the *download_vidhance* function. If your device uses a different architecture or Android version, you may need to replace these libraries with ones compatible with your device. Contact us if you need help with this matter.
 
-## Determining HAL version
-In order to choose the correct wrapper, you need to know which HAL version your original library has implemented. Query the device with:
+## Determining camera HAL and module version
+In order to choose the correct wrapper, you need to know which HAL and module version your original library has implemented. Query the device with:
 ```sh
-adb shell dumpsys | grep "Device version:"
+adb shell dumpsys | grep "Camera module"
 ```
 The result should be something like:
 ```
-Device version: 0x302
+Camera module HAL API version: 0x303
+Camera module API version: 0x204
+Camera module name: Vidhance Module
+Camera module author: Imint AB
 ```
-where the most significant digit is the major version number and the two least significant digits are the minor version number. In the above example the original HAL is therefore of version 3.2.
+The most significant digit is the major version number and the two least significant digits are the minor version number. In the above example the original HAL API is therefore of version 3.2 and the module API of version 2.4.
 
 ## Configuring Android makefiles
 ### Android.mk
@@ -155,7 +159,7 @@ The function *setup_device* will create a copy of your camera HAL library on you
 
 <a name="PushingToPhone"></a>
 # Pushing to phone
-Every time you have rebuilt the wrapper library you can use the push function to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library in the setup.sh script.
+Every time you have rebuilt the wrapper library with *build* you can use the *push* function to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library in the *setup.sh* script.
 
 # Using the Vidhance API
 
@@ -251,7 +255,7 @@ context = vidhance_context_new(settings);
 1. Make sure you have successfully executed the *setup_device* function so the backend library and the Vidhance library exist on the device (see [Preparing phone for wrapper](#PreparingPhoneForWrapper)).
 2. Build your implementation (see [Building](#Building)).
 3. Push the wrapper to the device (see [Pushing to phone](#PushingToPhone)).
-4. When the device has rebooted you can use any camera app on the device to view your results.
+4. You can now use any camera app on the device to view the results.
 
 ## What to expect
 If you have successfully built and pushed the correct files to your device you should be able to notice modifications in the captured video. If you used the default settings when creating the Vidhance context you can expect to see the following:
@@ -259,11 +263,10 @@ If you have successfully built and pushed the correct files to your device you s
 + A Vidhance logo in the upper right corner
 + Version number in the bottom right corner
 
-
 If your result is not as expected you can proceed to the next chapter or contact our support via the chat widget on this page.
 
 # Troubleshooting
-It is recommended to use the debug version of the Vidhance library while in development. Any version can be selected when running the *download_vidhance* script. The debug version includes useful print output which can be captured by configuring the `debugPrint` callback to a function of your choice (see [Debug print](#DebugPrint)).
+The Vidhance binary includes useful print output which can be captured by configuring the `debugPrint` callback to a function of your choice (see [Debug print](#DebugPrint)).
 
 <a name="UsingMonitor"></a>
 ## Using Monitor
@@ -271,7 +274,7 @@ The default callback for output is located in *vidhance/debug/Debug.h* and will 
 
 1. Download Android SDK [here](http://developer.android.com/sdk/index.html). We will only need the package listed under `SDK Tools Only`, but the full `Android Studio` package contains the SDK as well.
 2. Run *monitor* located in *android-sdks/tools*
-3. Make sure your device is connected by USB and with USB debugging enabled. You should see your device listed in the DDMS window.
+3. Make sure your device is connected by USB and with USB debugging enabled. You should see your device listed in the Android Device Monitor window.
 4. Create a new filter with these settings:
 
   + *Filter Name:* Vidhance
