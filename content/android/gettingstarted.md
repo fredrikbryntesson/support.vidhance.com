@@ -161,6 +161,9 @@ The function `setup_device` will create a copy of your camera HAL library on you
 # Pushing to phone
 Every time you have rebuilt the wrapper library with `build` you can use the `push` function to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library in the *setup.sh* script.
 
+# Restoring phone
+If you want to reset the device to its original state you can use the `restore` function. This will set the camera library on the device to the original.
+
 # Using the Vidhance API
 
 Examine the *CameraWrapper* implementation in the HAL folder and use it as an example for how to integrate Vidhance for Android. We recommend you do your own implementation in the VidhanceProcessor class however, since this is the place for platform specific code. Here is a more detailed description of the code using the Vidhance API:
