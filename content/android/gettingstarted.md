@@ -185,7 +185,7 @@ Vidhance depends on a number of callbacks to interact with Android's GraphicBuff
 #include "../vidhance/graphicbuffer/GraphicBufferWrapper.h"
 ```
 ```
-kean_draw_gpu_android_graphicBuffer_registerCallbacks(
+vidhance_graphic_buffer_register_callbacks(
   allocateGraphicBuffer,
   createGraphicBuffer,
   freeGraphicBuffer,
@@ -200,28 +200,29 @@ If you want debug output from Vidhance you can register a print callback. A defa
 #include "../vidhance/debug/Debug.h"
 ```
 ```
-kean_base_debug_registerCallback(debugPrint);
+vidhance_debug_register_callback(debugPrint);
 ```
 
 ## Creating Vidhance context
 To create a context we first need to create settings for the context. It is recommended to use the default settings until you have successfully built and pushed to the device.
 ```
-vidhance_settings settings = vidhance_settings_new();
+vidhance_settings_t settings = vidhance_settings_new();
 ```
 If your device can provide gyro sensor data you should register a RotationSensor in the settings. Include the header in the vidhance folder and register the function pointer.
 ```
 #include "../vidhance/sensors/GyroReader.h"
 ```
 ```
-vidhance_motion_settings motionSettings = vidhance_settings_getMotion(settings);
-vidhance_motion_sensor_settings sensorSettings = vidhance_motion_settings_getSensor(motionSettings);
-vidhance_motion_sensor_gyro gyroSensor = vidhance_motion_sensor_gyro_new(GyroReader::getAngularVelocity, GyroReader::getInstance()->getSamplePeriod());
-vidhance_motion_sensor_rotation rotationSensor = vidhance_motion_sensor_rotation_new((vidhance_motion_sensor)gyroSensor);
-vidhance_motion_sensor_settings_setRotation(sensorSettings, rotationSensor);
+vidhance_settings_t settings = vidhance_settings_new();
+vidhance_motion_settings_t motion_settings = vidhance_settings_get_motion(settings);
+vidhance_motion_sensor_settings_t sensor_settings = vidhance_motion_settings_get_sensor(motion_settings);
+vidhance_motion_sensor_t gyro_sensor = vidhance_gyro_sensor_new(GyroReader::getAngularVelocity, GyroReader::getInstance()->getSamplePeriod());
+vidhance_motion_sensor_t rotation_sensor = vidhance_rotation_sensor_new(gyro_sensor);
+vidhance_motion_sensor_settings_set_rotation(sensor_settings, rotation_sensor);
 ```
 We can now create a vidhance context using the settings.
 ```
-vidhance_context context = vidhance_context_new(settings);
+vidhance_context_t context = vidhance_context_new(settings);
 ```
 
 ## Configuring settings
@@ -229,23 +230,23 @@ The Vidhance API enables you to configure the settings of the different modules 
 
 ```
 /* Motion stabilize settings */
-extern vidhance_stabilizer_settings vidhance_settings_getStabilize(const vidhance_settings settings);
-extern void vidhance_stabilizer_settings_setMode(vidhance_stabilizer_settings settings, vidhance_stabilizer_mode mode);
-extern vidhance_stabilizer_mode vidhance_stabilizer_settings_getMode(const vidhance_stabilizer_settings settings);
-extern void vidhance_stabilizer_settings_setShowTrace(vidhance_stabilizer_settings settings, bool showTrace);
-extern bool vidhance_stabilizer_settings_getShowTrace(const vidhance_stabilizer_settings settings);
-extern void vidhance_stabilizer_settings_setTargetScale(vidhance_stabilizer_settings settings, float targetScale);
-extern float vidhance_stabilizer_settings_getTargetScale(const vidhance_stabilizer_settings settings);
+extern vidhance_stabilizer_settings_t vidhance_settings_get_stabilize(const vidhance_settings_t settings);
+extern void vidhance_stabilizer_settings_set_mode(vidhance_stabilizer_settings_t settings, vidhance_stabilizer_mode_t mode);
+extern vidhance_stabilizer_mode_t vidhance_stabilizer_settings_get_mode(const vidhance_stabilizer_settings_t settings);
+extern void vidhance_stabilizer_settings_set_show_trace(vidhance_stabilizer_settings_t settings, bool show_trace);
+extern bool vidhance_stabilizer_settings_get_show_trace(const vidhance_stabilizer_settings_t settings);
+extern void vidhance_stabilizer_settings_set_target_scale(vidhance_stabilizer_settings_t settings, float target_scale);
+extern float vidhance_stabilizer_settings_get_target_scale(const vidhance_stabilizer_settings_t settings);
 ```
 
 First we need a reference to the motion settings from our base settings:
 ```
-vidhance_settings settings = vidhance_settings_new();
-vidhance_stabilizer_settings stabilizeSettings = vidhance_settings_getStabilize(settings);
+vidhance_settings settings_t = vidhance_settings_new();
+vidhance_stabilizer_settings_t stabilize_settings = vidhance_settings_get_stabilize(settings);
 ```
 Then we can alter a setting for this settings object:
 ```
-vidhance_stabilizer_settings_setTargetScale(stabilizeSettings, 0.9f);
+vidhance_stabilizer_settings_set_target_scale(stabilizeSettings, 0.9f);
 ```
 Finally we create the Vidhance context with the base settings object:
 ```
