@@ -143,7 +143,7 @@ Make sure the correct VideoProcessor header for your HAL version is included in 
 
 <a name="Building"></a>
 # Building
-The *build* function is an example of how to use `ndk-build` to build the sources. You are of course free to use your toolchain of choice. The build should generate *libcamera_wrapper.so*.
+The `build` function is an example of how to use `ndk-build` to build the sources. You are of course free to use your toolchain of choice. The build should generate *libcamera_wrapper.so*.
 
 <a name="PreparingPhoneForWrapper"></a>
 # Preparing phone for wrapper
@@ -155,11 +155,11 @@ It is recommended to create a backup of the original HAL implementation if you s
 adb pull /system/lib/hw/camera.msm8994.so camera_backup.msm8994.so
 ```
 
-The function *setup_device* will create a copy of your camera HAL library on your device and rename it to *camera_backend.so*. It will also push the Vidhance library to the phone - so make sure you have downloaded it and specified the correct path to it in the setup.sh script. Once the function has completed you don't have to run it unless you reinstall Android on your phone or simply want to push a newer version of the Vidhance library.
+The function `setup_device` will create a copy of your camera HAL library on your device and rename it to *camera_backend.so*. It will also push the Vidhance library to the phone - so make sure you have downloaded it and specified the correct path to it in the setup.sh script. Once the function has completed you don't have to run it unless you reinstall Android on your phone or simply want to push a newer version of the Vidhance library.
 
 <a name="PushingToPhone"></a>
 # Pushing to phone
-Every time you have rebuilt the wrapper library with *build* you can use the *push* function to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library in the *setup.sh* script.
+Every time you have rebuilt the wrapper library with `build` you can use the `push` function to overwrite it on the device. Make sure you set the *CAMERA_HAL* variable to the name of your original library and the correct path to your wrapper library in the *setup.sh* script.
 
 # Using the Vidhance API
 
@@ -252,7 +252,7 @@ context = vidhance_context_new(settings);
 
 # Running
 ## Instructions
-1. Make sure you have successfully executed the *setup_device* function so the backend library and the Vidhance library exist on the device (see [Preparing phone for wrapper](#PreparingPhoneForWrapper)).
+1. Make sure you have successfully executed the `setup_device` function so the backend library and the Vidhance library exist on the device (see [Preparing phone for wrapper](#PreparingPhoneForWrapper)).
 2. Build your implementation (see [Building](#Building)).
 3. Push the wrapper to the device (see [Pushing to phone](#PushingToPhone)).
 4. You can now use any camera app on the device to view the results.
