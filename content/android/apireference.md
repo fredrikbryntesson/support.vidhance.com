@@ -10,10 +10,10 @@ menu:
 
 This section will describe the available methods and types in the Vidhance API along with a few simple examples.
 
-[Initializing Vidhance](../api/initializing/index.html)
+[Initializing Vidhance](../api/initializing/)
 
-[Creating and adjusting settings](../api/settings/index.html)
+[Creating and adjusting settings](../api/settings/)
 
-[Creating contexts](../api/contexts/index.html)
+[Creating contexts](../api/contexts/)
 
-[Processing frames](../api/processing/index.html)
+[Processing frames](../api/processing/)

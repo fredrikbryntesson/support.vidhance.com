@@ -1,5 +1,5 @@
 
-[Back to API overview](./android/apireference/index.html)
+[Back to API overview](../../apireference/)
 # Initializing Vidhance
 ## Overview
 ---
