@@ -1,14 +1,9 @@
 ---
 date: "2015-03-11T14:32:03+01:00"
 title: "Evaluate Vidhance Mobile"
-menu:
-  main:
-    parent: "android"
-    weight: 10
-    name: "evaluate"
 ---
 
-# Introduction
+<!-- # Introduction
 This section describes how to download and flash the files necessary to evaluate Vidhance Mobile on a Nexus 6 device with Android 5.1.
 
 # Prerequisites
@@ -87,4 +82,4 @@ Skip this step if you already have a rooted version of Android 5.1 on the device
 2. Switch to video capture.
 3. You should see a viewfinder in the preview representing the area that will be captured in the video.
 4. Start recording.
-5. The resulting video should be stabilized and contain an Imint logotype and a trace showing the stabilization for the x and y axes.
+5. The resulting video should be stabilized and contain an Imint logotype and a trace showing the stabilization for the x and y axes. -->
