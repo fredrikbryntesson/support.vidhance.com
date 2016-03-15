@@ -29,6 +29,7 @@ vidhance_frame_t vidhance_context_process(vidhance_context_t context, vidhance_f
 *context* The context in which to process.
 
 *frame* The input frame.
+
 ---
 ### vidhance_context_process_output
 Process a frame in the specified context using different buffers as input and output.
