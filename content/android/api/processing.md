@@ -81,10 +81,13 @@ vidhance_context_start(context);
 
 Process frames by creating a *vidhance_image_t* from the GraphicBuffer from the camera.
 ``` c
+vidhance_context_process_output(context, this->createFrame(frame, this->createImage(frame.inputBuffer)),
+		this->createFrame(frame, this->createImage(frame.outputBuffer)));
 ```
 
 Process preview frames.
 ``` c
+vidhance_context_process_preview(context, this->createFrame(frame, this->createImage(frame.inputBuffer)));
 ```
 
 End the video session.
