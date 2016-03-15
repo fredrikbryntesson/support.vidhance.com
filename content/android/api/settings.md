@@ -120,6 +120,18 @@ float vidhance_stabilizer_settings_get_target_scale(const vidhance_stabilizer_se
 *target_scale* The relative amount of cropping for the left, right, bottom and top side. Valid range 0.01 - 1.0.
 
 ---
+### vidhance_stabilizer_settings_set_latency
+Sets the frame latency. A higher number of frames will increase both performance and stabilization smoothness.
+```
+void vidhance_stabilizer_settings_set_latency(vidhance_stabilizer_settings_t settings, int frames);
+int vidhance_stabilizer_settings_get_latency(const vidhance_stabilizer_settings_t settings);
+```
+#### Parameters
+*settings* A stabilize settings object.
+
+*frames* The number of frames latency. Valid range 0 - 15.
+
+---
 
 ## Example
 ``` c
