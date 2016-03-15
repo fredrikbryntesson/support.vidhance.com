@@ -141,6 +141,14 @@ Make sure the correct VideoProcessor header for your HAL version is included in 
 #include "../HAL/HAL3/DoubleBufferVideoProcessor.h"
 ```
 
+### Implement getStride
+The stride factor for GraphicBuffer depends on the platform you are using. You therefore need to define a function where this information can be accessed. Take a look at the implementation for Nexus 6P:
+```c++
+stride_t VidhanceProcessor::getStride(const sp<GraphicBuffer>& buffer) {
+	return stride_t(ALIGN(buffer->width, buffer->usage & GraphicBuffer::USAGE_HW_VIDEO_ENCODER ? 64 : 32), ALIGN(buffer->height, 32));
+}
+```
+
 <a name="Building"></a>
 # Building
 The `build` function is an example of how to use `ndk-build` to build the sources. You are of course free to use your toolchain of choice. The build should generate *libcamera_wrapper.so*.
@@ -166,7 +174,7 @@ If you want to reset the device to its original state you can use the `restore` 
 
 # Using the Vidhance API
 
-Examine the *CameraWrapper* implementation in the HAL folder and use it as an example for how to integrate Vidhance for Android. We recommend you do your own implementation in the VidhanceProcessor class however, since this is the place for platform specific code. Here is a more detailed description of the code using the Vidhance API:
+Examine the *CameraWrapper* implementation in the HAL folder and use it as an example for how to interact with the Vidhance API for Android. Here is a more detailed description of the code using the Vidhance API:
 
 ## Initializing
 Start with including the header containing the Vidhance API:
