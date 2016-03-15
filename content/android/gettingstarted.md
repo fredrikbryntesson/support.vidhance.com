@@ -137,6 +137,7 @@ The `VidhanceProcessor` implementation in the Nexus 6P folder is an example of h
 Make sure the correct VideoProcessor header for your HAL version is included in VidhanceProcessor.h.
 ```
 /* VidhanceProcessor.h */
+#include "../HAL/HAL3/VideoProcessor.h"
 #include "../HAL/HAL3/DoubleBufferVideoProcessor.h"
 ```
 
@@ -208,7 +209,29 @@ To create a context we first need to create settings for the context. It is reco
 ```
 vidhance_settings_t settings = vidhance_settings_new();
 ```
-If your device can provide gyro sensor data you should register a RotationSensor in the settings. Include the header in the vidhance folder and register the function pointer.
+If your device can provide gyro sensor data you should register a RotationSensor in the settings. You can include the GyroReader header in the vidhance folder and use a predefined function `GyroReader::getAngularVelocity` which uses the Android SensorManager API. Of course you are free to supply a custom function pointer for the sensor sampling, as long as it will correctly return the requested samples between two camera timestamps. For this to be possible you need to be able to synchronize the camera timestamps and gyro timestamps.
+
+Example implementation of sampling function:
+```c++
+vidhance_angular_velocity_measurements_t GyroReader::_getAngularVelocity(vidhance_date_time_t timestamp, vidhance_time_span_t length) {
+	int64_t suspendedTimeNs = systemTime(SYSTEM_TIME_BOOTTIME) - systemTime(SYSTEM_TIME_MONOTONIC);
+	vidhance_angular_velocity_measurements_t result = vidhance_angular_velocity_measurements_new(this->getSamplePeriod());
+	std::vector<ASensorEvent> events = this->getEvents(timestamp, length);
+	std::vector<ASensorEvent>::const_iterator iter;
+	for(iter = events.begin(); iter != events.end(); ++iter) {
+		ASensorEvent event = *iter;
+		int64_t eventTimestampTicks = (event.timestamp - suspendedTimeNs) / 100;
+		vidhance_float_vector_3d_t velocity = vidhance_float_vector_3d_new(-event.data[1], -event.data[0], -event.data[2]);
+		vidhance_date_time_t eventTime = vidhance_date_time_new(eventTimestampTicks);
+		vidhance_angular_velocity_measurement_t measurement = vidhance_angular_velocity_measurement_new(velocity, eventTime);
+		vidhance_angular_velocity_measurements_add(result, measurement);
+	}
+	events.clear();
+	return result;
+}
+```
+
+
 ```
 #include "../vidhance/sensors/GyroReader.h"
 ```
@@ -241,16 +264,84 @@ extern float vidhance_stabilizer_settings_get_target_scale(const vidhance_stabil
 
 First we need a reference to the motion settings from our base settings:
 ```
-vidhance_settings settings_t = vidhance_settings_new();
+vidhance_settings_t settings = vidhance_settings_new();
 vidhance_stabilizer_settings_t stabilize_settings = vidhance_settings_get_stabilize(settings);
 ```
 Then we can alter a setting for this settings object:
 ```
-vidhance_stabilizer_settings_set_target_scale(stabilizeSettings, 0.9f);
+vidhance_stabilizer_settings_set_target_scale(stabilize_settings, 0.9f);
 ```
 Finally we create the Vidhance context with the base settings object:
 ```
 context = vidhance_context_new(settings);
+```
+
+## Processing frames
+*VidhanceProcessor* may inherit either *VideoProcessor* or *DoubleBufferVideoProcessor*. The difference is purely an optimization so we recommend starting out with a *VideoProcessor* implementation. *VideoProcessor* will override some of the HAL functions and prepare the camera buffers and metadata for input to Vidhance by creating a `frame_data_t` object:
+```c++
+typedef struct {
+	sp<GraphicBuffer> inputBuffer;
+	sp<GraphicBuffer> outputBuffer;
+	uint64_t timestamp;
+	uint64_t lifetime;
+	uint64_t rollingShutterTime;
+	uint32_t frame_number;
+	float focalLength;
+	int64_t exposureTime;
+	int32_t cropRegion[4];
+} frame_data_t;
+```
+The various functions in *CameraWrapper* will then be called by *VideoProcessor* and the *frame_data_t* can be converted into Vidhance compatible types.
+
+Example showing how a *vidhance_image_t* is constructed from *GraphicBuffer* :
+```c++
+vidhance_image_t CameraWrapper::createImage(const sp<GraphicBuffer>& buffer, const FreeFlag flag) {
+	stride_t stride = this->getStride(buffer);
+	int uvOffset = stride.horizontal * stride.vertical;
+	vidhance_int_vector_2d_t size = vidhance_int_vector_2d_new(buffer->width, buffer->height);
+	GraphicBufferWrapper* wrapper = new GraphicBufferWrapper(buffer, flag);
+	// Image objects for Vidhance. Ownership is passed to Vidhance when processed, hence memory management is handled internally.
+	vidhance_graphic_buffer_t wrappedBuffer = vidhance_graphic_buffer_new((void*)wrapper, (void*)buffer->getNativeBuffer(),
+			(void*)buffer->handle, size, stride.horizontal, buffer->format);
+	return vidhance_graphic_buffer_yuv_420_semiplanar_new(wrappedBuffer, size, stride.horizontal, uvOffset);
+}
+```
+
+Example showing how a *vidhance_frame_t* is constructed from metadata:
+```c++
+vidhance_frame_t CameraWrapper::createFrame(const frame_data_t& frame, const vidhance_image_t image) {
+	int activePixelArrayWidth = this->cameraMeta.activePixelArraySize[2];
+	int activePixelArrayHeight = this->cameraMeta.activePixelArraySize[3];
+	int maxPixelArrayWidth = this->cameraMeta.pixelArraySize[0];
+	int resolutionWidth = frame.inputBuffer->width;
+	float focalLength = frame.focalLength;
+	float sensorWidth = this->cameraMeta.physicalSize[0];
+	float focalLengthPixels = float(resolutionWidth) * focalLength / sensorWidth;
+	float cropY = 1.0f;
+	if(activePixelArrayWidth > 0 && activePixelArrayHeight > 0) {
+		//Note: This is actually more correct but the cropRegion metadata gives incorrect information on some devices
+		//float cropY = (float)frame.cropRegion[3] / activePixelArrayHeight;
+		//This approximation will do for now
+		cropY = ((float)activePixelArrayWidth * frame.inputBuffer->height) / (activePixelArrayHeight * frame.inputBuffer->width);
+	}
+
+	int64_t croppedReadout = frame.rollingShutterTime * cropY;
+	int64_t timestampOffset = (frame.rollingShutterTime - croppedReadout) / 2;
+	uint64_t timestamp = frame.timestamp + timestampOffset;
+	vidhance_time_span_t readoutSpan = vidhance_time_span_new(NS_TO_TICKS(croppedReadout));
+	vidhance_time_span_t exposureTime = vidhance_time_span_new(NS_TO_TICKS(frame.exposureTime));
+	vidhance_frame_header_t header = vidhance_header_new(vidhance_date_time_new(NS_TO_TICKS(timestamp)), vidhance_time_span_new(NS_TO_TICKS(frame.lifetime)),
+			readoutSpan, focalLengthPixels, exposureTime);
+	return vidhance_frame_from_image(header, image);
+}
+```
+
+When the *vidhance_frame_t* has been created, it can be sent to Vidhance:
+```c++
+void CameraWrapper::processVideoCapture(const frame_data_t& frame) {
+	vidhance_context_process_output(context, this->createFrame(frame, this->createImage(frame.inputBuffer)),
+			this->createFrame(frame, this->createImage(frame.outputBuffer)));
+}
 ```
 
 # Running
