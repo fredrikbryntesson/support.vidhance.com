@@ -14,7 +14,7 @@ Vidhance is the trademark used for all Imints video enhancement features. Typica
 
 ## Ways to integrate Vidhance in your product
 ### Vidview
-[Vidview](http://imint.se/vidview) is a video viewer. It can be integrated into your product using the Vidview SDK. The SDK is available in several versions. You typically want to use Vidview if you want to enhance the video at the moment when they are viewed.
+Vidview is a video viewer. It can be integrated into your product using the Vidview SDK. The SDK is available in several versions. You typically want to use Vidview if you want to enhance the video at the moment when they are viewed.
 
 You can read more about integrating Vidview [here](../vidview).
 

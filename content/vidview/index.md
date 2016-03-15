@@ -6,7 +6,7 @@ menu:
     weight: 20
     name: "vidview"
 ---
-This page contains support resources for Imint's Vidview product. For information about the product please refer to our [website](http://imint.se/products/vidview).
+This page contains support resources for Imint's Vidview product.
 
 # Prerequisites
 
@@ -20,7 +20,7 @@ In order to use Vidhance video enhancements and/or extra video codecs you need a
 
 ## Considerations
 
-What to consider before starting the integration of the Vidview SDK are outlined in the [Vidview Integration Considerations](sdk/Vidview Integration Considerations.html) ([pdf](sdk/Vidview Integration Considerations.pdf)) document.
+What to consider before starting the integration of the Vidview SDK are outlined in the [Vidview Integration Considerations](http://vidview.imint.se/sdk/Vidview Integration Considerations.html) ([pdf](http://vidview.imint.se/sdk/Vidview Integration Considerations.pdf)) document.
 
 # Installing
 
