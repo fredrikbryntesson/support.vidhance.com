@@ -27,6 +27,7 @@ vidhance_motion_settings_t vidhance_settings_get_motion(vidhance_settings_t sett
 ```
 #### Parameters
 *settings* A base settings object.
+
 ---
 ### vidhance_motion_sensor_settings_t
 The settings object for external motion sensors.
