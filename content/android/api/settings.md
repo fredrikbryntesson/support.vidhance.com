@@ -96,46 +96,10 @@ vidhance_stabilizer_mode_t vidhance_stabilizer_settings_get_mode(const vidhance_
 *mode* One of the modes in vidhance_stabilizer_mode_t.
 
 ---
-### vidhance_motion_stabilize_settings_set_show_trace
-Enables the drawing of a trace to visualize the stabilization. Used for debugging and testing.
-```
-void vidhance_stabilizer_settings_set_show_trace(vidhance_stabilizer_settings_t settings, bool show_trace);
-bool vidhance_stabilizer_settings_get_show_trace(const vidhance_stabilizer_settings_t settings);
-```
-#### Parameters
-*settings* A stabilize settings object.
-
-*show_trace* A bool which enables or disables the trace.
-
----
-### vidhance_stabilizer_settings_set_target_scale
-Sets the relative amount of the frame to be cropped during stabilization. A lower value will increase the maximum motion amplitude which is able to be stabilized but increase the cropping of the original frame.
-```
-void vidhance_stabilizer_settings_set_target_scale(vidhance_stabilizer_settings_t settings, float target_scale);
-float vidhance_stabilizer_settings_get_target_scale(const vidhance_stabilizer_settings_t settings);
-```
-#### Parameters
-*settings* A stabilize settings object.
-
-*target_scale* The relative amount of cropping for the left, right, bottom and top side. Valid range 0.01 - 1.0.
-
----
-### vidhance_stabilizer_settings_set_latency
-Sets the frame latency. A higher number of frames will increase both performance and stabilization smoothness.
-```
-void vidhance_stabilizer_settings_set_latency(vidhance_stabilizer_settings_t settings, int frames);
-int vidhance_stabilizer_settings_get_latency(const vidhance_stabilizer_settings_t settings);
-```
-#### Parameters
-*settings* A stabilize settings object.
-
-*frames* The number of frames latency. Valid range 0 - 15.
-
----
 
 ## Example
 ``` c
 vidhance_settings_t settings = vidhance_settings_new();
 vidhance_stabilizer_settings_t stabilizeSettings = vidhance__settings_get_stabilize(settings);
-vidhance_stabilizer_settings_set_target_scale(stabilizeSettings, 0.8f);
+vidhance_stabilizer_settings_set_mode(stabilizeSettings, VIDHANCE_STABILIZER_ON);
 ```

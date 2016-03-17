@@ -264,10 +264,6 @@ The Vidhance API enables you to configure the settings of the different modules 
 extern vidhance_stabilizer_settings_t vidhance_settings_get_stabilize(const vidhance_settings_t settings);
 extern void vidhance_stabilizer_settings_set_mode(vidhance_stabilizer_settings_t settings, vidhance_stabilizer_mode_t mode);
 extern vidhance_stabilizer_mode_t vidhance_stabilizer_settings_get_mode(const vidhance_stabilizer_settings_t settings);
-extern void vidhance_stabilizer_settings_set_show_trace(vidhance_stabilizer_settings_t settings, bool show_trace);
-extern bool vidhance_stabilizer_settings_get_show_trace(const vidhance_stabilizer_settings_t settings);
-extern void vidhance_stabilizer_settings_set_target_scale(vidhance_stabilizer_settings_t settings, float target_scale);
-extern float vidhance_stabilizer_settings_get_target_scale(const vidhance_stabilizer_settings_t settings);
 ```
 
 First we need a reference to the motion settings from our base settings:
@@ -277,7 +273,7 @@ vidhance_stabilizer_settings_t stabilize_settings = vidhance_settings_get_stabil
 ```
 Then we can alter a setting for this settings object:
 ```
-vidhance_stabilizer_settings_set_target_scale(stabilize_settings, 0.9f);
+vidhance_stabilizer_settings_set_mode(stabilizeSettings, VIDHANCE_STABILIZER_ON);
 ```
 Finally we create the Vidhance context with the base settings object:
 ```
