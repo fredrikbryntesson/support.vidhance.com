@@ -1,4 +1,5 @@
 [Back to API overview](../../apireference/)
+
 # Processing frames
 ## Overview
 ---
@@ -44,6 +45,17 @@ void vidhance_context_process_output(vidhance_context_t context, vidhance_frame_
 *output* The output frame where the result is written.
 
 ---
+### vidhance_context_process_in_place
+Process a frame in the specified context using the same buffer as input and output.
+``` c
+void vidhance_context_process_in_place(vidhance_context_t context, vidhance_frame_t frame);
+```
+#### Parameters
+*context* The context in which to process.
+
+*frame* The input frame and output frame where the result is written.
+
+---
 ### vidhance_context_process_preview
 Process the preview buffer.
 ``` c
@@ -51,7 +63,6 @@ void vidhance_context_process_preview(vidhance_context_t context, vidhance_frame
 ```
 #### Parameters
 *context* The context in which to process.
-
 *input* The input frame.
 
 ---
@@ -63,6 +74,50 @@ typedef struct {
 	int y;
 } vidhance_int_vector_2d_t;
 vidhance_int_vector_2d_t vidhance_int_vector_2d_new(int x, int y);
+```
+
+---
+### vidhance_float_vector_3d_t
+3D float vector used by Vidhance.
+``` c
+typedef struct {
+	float x;
+	float y;
+	float z;
+} vidhance_float_vector_3d_t;
+```
+
+---
+### vidhance_float_point_3d_t
+3D float point used by Vidhance.
+``` c
+typedef struct {
+	float x;
+    float y;
+    float z;
+} vidhance_float_point_3d_t;
+vidhance_float_point_3d_t vidhance_float_point_3d_new(float x, float y, float z);
+```
+
+---
+### vidhance_quaternion_t
+quaternion used by Vidhance.
+``` c
+typedef struct {
+	float real;
+	vidhance_float_point_3d_t imaginary;
+} vidhance_quaternion_t;
+vidhance_quaternion_t vidhance_quaternion_new(float w, float x, float y, float z);
+```
+
+---
+### vidhance_float_rotation_3d_t
+structure representing a 3d rotation.
+``` c
+typedef struct {
+	vidhance_quaternion_t quaternion;
+} vidhance_float_rotation_3d_t;
+vidhance_float_rotation_3d_t vidhance_float_rotation_3d_new(const vidhance_quaternion_t quaternion);
 ```
 
 ---
@@ -123,7 +178,7 @@ vidhance_time_span_t vidhance_time_span_from_weeks(const double count);
 ### vidhance_header_t
 A header object holding an image and metadata.
 ``` c
-typedef struct _vidhance_frame_header_t* vidhance_frame_header_t;
+typedef struct _vidhance_header_t* vidhance_header_t;
 ```
 
 ---
@@ -131,6 +186,34 @@ typedef struct _vidhance_frame_header_t* vidhance_frame_header_t;
 Corresponds to the GraphicBuffer class in Android.
 ``` c
 typedef struct _vidhance_graphic_buffer_t* vidhance_graphic_buffer_t;
+```
+
+
+---
+### vidhance_graphic_buffer_t
+Creates a new vidhance_graphic_buffer_t
+``` c
+vidhance_graphic_buffer_t vidhance_graphic_buffer_new(const void* backend, const void* native_buffer, const void* handle, vidhance_int_vector_2d_t size, int pixel_stride, int format);
+```
+
+#### Parameters
+*backend* The GraphicBuffer
+
+*native_buffer* The native buffer
+
+*handle* The buffer handle
+
+*size* Image resolution.
+
+*pixel_stride* Image stride in pixels
+
+*format* The buffer format
+
+---
+### vidhance_graphic_buffer_t
+Frees a vidhance_graphic_buffer_t, normally not needed since ownership is transferred to vidhance when creating an image
+``` c
+void vidhance_graphic_buffer_free(vidhance_graphic_buffer_t buffer);
 ```
 
 ---
@@ -183,3 +266,162 @@ End the video session.
 ``` c
 vidhance_context_stop(context);
 ```
+
+---
+# Sensors
+---
+
+## General
+
+### vidhance_motion_sensor_t
+Represents a motion sensor
+``` c
+typedef struct _vidhance_motion_sensor_t* vidhance_motion_sensor_t;
+```
+
+---
+### vidhance_motion_sensor_free
+Frees the memory allocated for a motion sensor
+``` c
+void vidhance_motion_sensor_free(vidhance_motion_sensor_t);
+```
+
+---
+## Orientation sensor measurment
+---
+
+### vidhance_orientation_measurement_t
+``` c
+typedef struct {
+	vidhance_float_rotation_3d_t rotation;
+	vidhance_date_time_t timestamp;
+} vidhance_orientation_measurement_t;
+```
+### vidhance_orientation_measurement_new
+``` c
+vidhance_orientation_measurement_t vidhance_orientation_measurement_new(vidhance_float_rotation_3d_t rotation, vidhance_date_time_t time);
+```
+
+---
+## Orientation sensor measurments
+---
+
+### vidhance_orientation_measurements_t
+Represents several instances of [vidhance_orientation_measurements_t]({{< ref "#vidhance-orientation-measurements-t" >}})
+``` c
+typedef struct _vidhance_orientation_measurements_t* vidhance_orientation_measurements_t;
+```
+
+### vidhance_orientation_measurements_new
+``` c
+vidhance_orientation_measurements_t vidhance_orientation_measurements_new();
+```
+
+### vidhance_orientation_measurements_free
+Frees all the internal memory and all added [vidhance_orientation_measurement_t]({{< ref "#vidhance-orientation-measurement-t" >}}) instances
+``` c
+void vidhance_orientation_measurements_free(vidhance_orientation_measurements_t);
+```
+
+### vidhance_orientation_measurements_add
+```
+void vidhance_orientation_measurements_add(vidhance_orientation_measurements_t result, vidhance_orientation_measurement_t measurement);
+```
+
+---
+## Orientation sensor
+---
+
+### get_orientation_cb_t
+Defintion of callback function used to get [vidhance_orientation_measurements_t]({{< ref "#vidhance-orientation-measurements-t" >}})
+``` c
+typedef vidhance_orientation_measurements_t (*get_orientation_cb_t)(vidhance_date_time_t, vidhance_time_span_t);
+```
+
+### vidhance_orientation_sensor_new
+Creates a new orientation sensor
+``` c
+vidhance_motion_sensor_t vidhance_orientation_sensor_new(get_orientation_cb_t cb, vidhance_time_span_t sample_period);
+```
+
+#### Parameters
+*get_orientation_cb_t* Callback used when Vidhance requests new orientation sensor data
+
+*sample_period* How often Vidhance vill sample the orientation sensor
+
+---
+## Angular velocity sensor measurment
+---
+
+### vidhance_angular_velocity_measurement_t
+``` c
+typedef struct {
+	vidhance_float_vector_3d_t velocity;
+	vidhance_date_time_t timestamp;
+} vidhance_angular_velocity_measurement_t;
+```
+
+### vidhance_angular_velocity_measurement_new
+``` c
+vidhance_angular_velocity_measurement_t vidhance_angular_velocity_measurement_new(vidhance_float_vector_3d_t velocity, vidhance_date_time_t time);
+```
+
+---
+## Angular velocity sensor measurements
+---
+
+### vidhance_angular_velocity_measurements_t
+Represents several instances of [vidhance_angular_velocity_measurement_t]({{< ref "#vidhance-angular-velocity-measurement-t" >}})
+``` c
+typedef struct _vidhance_angular_velocity_measurements_t* vidhance_angular_velocity_measurements_t;
+```
+
+### vidhance_angular_velocity_measurements_new
+``` c
+vidhance_angular_velocity_measurements_t vidhance_angular_velocity_measurements_new(vidhance_time_span_t sample_period);
+```
+
+### vidhance_angular_velocity_measurements_add
+``` c
+void vidhance_angular_velocity_measurements_add(vidhance_angular_velocity_measurements_t result, vidhance_angular_velocity_measurement_t measurement);
+```
+
+### vidhance_angular_velocity_measurements_free
+Frees all the internal memory and all added [vidhance_angular_velocity_measurement_t]({{< ref "#vidhance-angular-velocity-measurement-t" >}}) instances
+``` c
+void vidhance_angular_velocity_measurements_free(vidhance_angular_velocity_measurements_t);
+```
+
+---
+## Gyro sensor
+---
+
+### get_velocity_cb_t
+Defintion of callback function used to get [vidhance_angular_velocity_measurements_t]({{< ref "#vidhance-angular-velocity-measurements-t" >}})
+``` c
+typedef vidhance_angular_velocity_measurements_t (*get_velocity_cb_t)(vidhance_date_time_t, vidhance_time_span_t);
+```
+
+### vidhance_gyro_sensor_new
+Creates a new gyro sensor
+``` c
+vidhance_motion_sensor_t vidhance_gyro_sensor_new(get_velocity_cb_t cb, vidhance_time_span_t sample_period);
+```
+
+#### Parameters
+*get_velocity_cb_t* Callback used when Vidhance requests new gyro sensor data
+
+*sample_period* How often Vidhance vill sample the gyro sensor
+
+---
+## Rotation sensor
+---
+
+### vidhance_rotation_sensor_new
+Creates a new rotation sensor
+``` c
+vidhance_motion_sensor_t vidhance_rotation_sensor_new(vidhance_motion_sensor_t sensor);
+```
+
+#### Parameters
+*sensor* A gyro sensor created using vidhance_gyro_sensor_new
