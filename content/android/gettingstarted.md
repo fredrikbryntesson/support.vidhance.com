@@ -343,8 +343,7 @@ vidhance_frame_t CameraWrapper::createFrame(const frame_data_t& frame, const vid
 When the *vidhance_frame_t* has been created, it can be sent to Vidhance:
 ```c++
 void CameraWrapper::processVideoCapture(const frame_data_t& frame) {
-	vidhance_context_process_output(context, this->createFrame(frame, this->createImage(frame.inputBuffer)),
-			this->createFrame(frame, this->createImage(frame.outputBuffer)));
+	vidhance_context_process_in_place(context, this->createFrame(frame, this->createImage(frame.inputBuffer)));
 }
 ```
 
