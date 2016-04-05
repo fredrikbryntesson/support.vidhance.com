@@ -69,7 +69,7 @@ sudo apt-get install git
 The repository can then be cloned from github:
 
 ```sh
-git clone https://github.com/vidhance/android-camera-wrapper
+git clone https://github.com/vidhance/android-camera-wrapper-legacy
 ```
 
 ## Setting up help functions
