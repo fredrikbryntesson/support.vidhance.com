@@ -334,7 +334,7 @@ vidhance_frame_t CameraWrapper::createFrame(const frame_data_t& frame, const vid
 	uint64_t timestamp = frame.timestamp + timestampOffset;
 	vidhance_time_span_t readoutSpan = vidhance_time_span_new(NS_TO_TICKS(croppedReadout));
 	vidhance_time_span_t exposureTime = vidhance_time_span_new(NS_TO_TICKS(frame.exposureTime));
-	vidhance_frame_header_t header = vidhance_header_new(vidhance_date_time_new(NS_TO_TICKS(timestamp)), vidhance_time_span_new(NS_TO_TICKS(frame.lifetime)),
+	vidhance_header_t header = vidhance_header_new(vidhance_date_time_new(NS_TO_TICKS(timestamp)), vidhance_time_span_new(NS_TO_TICKS(frame.lifetime)),
 			readoutSpan, focalLengthPixels, exposureTime);
 	return vidhance_frame_from_image(header, image);
 }
@@ -343,8 +343,7 @@ vidhance_frame_t CameraWrapper::createFrame(const frame_data_t& frame, const vid
 When the *vidhance_frame_t* has been created, it can be sent to Vidhance:
 ```c++
 void CameraWrapper::processVideoCapture(const frame_data_t& frame) {
-	vidhance_context_process_output(context, this->createFrame(frame, this->createImage(frame.inputBuffer)),
-			this->createFrame(frame, this->createImage(frame.outputBuffer)));
+	vidhance_context_process_in_place(context, this->createFrame(frame, this->createImage(frame.inputBuffer)));
 }
 ```
 
