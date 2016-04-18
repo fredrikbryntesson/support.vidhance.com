@@ -61,7 +61,7 @@ You will need `ndk-build`, located in the Android NDK, to build the sources for 
 
 ## Downloading Vidhance SDK
 To download Vidhance SDK for Android enter your key below and press download.
-<form id="downloadForm" action="#">
+<form id="downloadFormAndroid" action="#">
 <label>Product key: </label><input type="text"></input>
 <input type="submit" value="Download"></input>
 </form>
