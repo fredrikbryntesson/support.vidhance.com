@@ -58,19 +58,14 @@ You will need `ndk-build`, located in the Android NDK, to build the sources for 
 1. Download the installer [here](https://developer.android.com/ndk/downloads/index.html)
 2. Unpack the files into a path of your choice.
 
-## Downloading wrapper sources
-To quickly get started with Vidhance SDK we provide a public repository containing code to wrap the camera HAL and examples of how to integrate Vidhance SDK for Nexus devices. This code can easily be modified to run on your device.
 
-If you do not already have `git` installed, install it using:
-```sh
-sudo apt-get install git
-```
-
-The repository can then be cloned from github:
-
-```sh
-git clone https://github.com/vidhance/android-camera-wrapper-legacy
-```
+## Downloading Vidhance SDK
+To download Vidhance SDK for Android enter your key below and press download.
+<form id="downloadFormAndroid" action="#">
+<label>Product key: </label><input type="text"></input>
+<input type="submit" value="Download"></input>
+</form>
+<iframe src="" id="hiddenIFrame" style="display:none;" frameborder="0"></iframe>
 
 ## Setting up help functions
 In the `android-camera-wrapper/nexus6p` folder, you will find the script *setup.sh*. You need to set the correct paths and names in this file in order for the script to work. The following information is needed:
