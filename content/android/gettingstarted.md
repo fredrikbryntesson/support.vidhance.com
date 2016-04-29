@@ -129,23 +129,25 @@ This means the library is compiled for Android 6.0, using Camera module API vers
 In this file you can specify which Android API level you are building for. A complete list can be found [here](https://source.android.com/source/build-numbers.html).
 
 ## Changes in source code
-The `VidhanceProcessor` implementation in the Nexus 6P folder is an example of how to use the camera wrapper implementation in combination with the Vidhance library. You probably need some minor modifications before you start building.
-
-### Include correct VideoProcessor header
-Make sure the correct VideoProcessor header for your HAL version is included in VidhanceProcessor.h.
-```
-/* VidhanceProcessor.h */
-#include "../HAL/HAL3/VideoProcessor.h"
-#include "../HAL/HAL3/DoubleBufferVideoProcessor.h"
-```
+The `VidhanceContext` class in the vidhance folder is the reference implementation showing how to interact with the Vidhance API. The recommendation is to create your own context implementation and inherit this base class. Check the implementation of `Nexus6pContext` as an example. 
 
 ### Implement getStride
 The stride factor for GraphicBuffer depends on the platform you are using. You therefore need to define a function where this information can be accessed. Take a look at the implementation for Nexus 6P:
 ```c++
-stride_t VidhanceProcessor::getStride(const sp<GraphicBuffer>& buffer) {
-	return stride_t(ALIGN(buffer->width, buffer->usage & GraphicBuffer::USAGE_HW_VIDEO_ENCODER ? 64 : 32), ALIGN(buffer->height, 32));
+virtual stride_t getStride(const sp<GraphicBuffer>& buffer) {
+    int horizontalAlignment = 32;
+    int verticalAlignment = 32;
+    if (buffer->usage & GraphicBuffer::USAGE_HW_VIDEO_ENCODER)
+        horizontalAlignment = buffer->width > 3840 ? 128 : 64;
+    return stride_t(ALIGN(buffer->width, horizontalAlignment), ALIGN(buffer->height, verticalAlignment));
 }
 ```
+
+### Define context creation function
+A function needs to specify which `VidhanceContext` implementation should be chosen. Simply define this in the user space context code:
+```c++
+VidhanceContext* VidhanceContext::createVidhanceContext() { return new Nexus6pContext(); }
+``` 
 
 <a name="Building"></a>
 # Building
@@ -172,12 +174,12 @@ If you want to reset the device to its original state you can use the `restore` 
 
 # Using the Vidhance API
 
-Examine the *CameraWrapper* implementation in the HAL folder and use it as an example for how to interact with the Vidhance API for Android. Here is a more detailed description of the code using the Vidhance API:
+Examine the *VidhanceContext* implementation in the vidhance folder and use it as an example for how to interact with the Vidhance API for Android. Here is a more detailed description of the code using the Vidhance API:
 
 ## Initializing
 Start with including the header containing the Vidhance API:
 ```
-#include "../vidhance/vidhance.h"
+#include "vidhance/vidhance.h"
 ```
 
 Before you can use the Vidhance API you need to initialize it by calling the global load function:
@@ -204,7 +206,7 @@ vidhance_graphic_buffer_register_callbacks(
 ### Debug print
 If you want debug output from Vidhance you can register a print callback. A default function that prints to logcat is located in the vidhance folder but you are free to use your own.
 ```
-#include "../vidhance/debug/Debug.h"
+#include "vidhance/debug/Debug.h"
 ```
 ```
 vidhance_debug_register_callback(debugPrint);
