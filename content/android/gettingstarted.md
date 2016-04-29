@@ -95,16 +95,22 @@ The camera wrapper depends on libraries found in the Android source tree. We hav
 ## Determining camera HAL and module version
 In order to choose the correct wrapper, you need to know which HAL and module version your original library has implemented. Query the device with:
 ```sh
-adb shell dumpsys | grep "Camera module"
+-> adb shell dumpsys media.camera | egrep "^Camera.*:|Facing:|Device version:"
 ```
 The result should be something like:
 ```
-Camera module HAL API version: 0x303
+Camera module HAL API version: 0x100
 Camera module API version: 0x204
 Camera module name: Vidhance Module
 Camera module author: Imint AB
+Camera 0 information:
+  Facing: BACK
+  Device version: 0x303
+Camera 1 information:
+  Facing: FRONT
+  Device version: 0x303
 ```
-The most significant digit is the major version number and the two least significant digits are the minor version number. In the above example the original HAL API is therefore of version 3.2 and the module API of version 2.4.
+The most significant digit is the major version number and the two least significant digits are the minor version number. In the above example the HAL camera device version is therefore of version 3.3 and the module API of version 2.4.
 
 ## Configuring Android makefiles
 ### Android.mk
