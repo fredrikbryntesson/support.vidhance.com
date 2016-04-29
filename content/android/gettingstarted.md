@@ -87,7 +87,7 @@ You now have access to a number of help functions listed in the terminal.
 We recommend that you modify the example implementation for Nexus 6P to create a compatible version for your device.
 
 ## Android dependencies
-The camera wrapper depends on libraries found in the Android source tree. We have provided the needed headers and libraries for Nexus 6P which should be compatible with any 32-bit ARM-based device running Android 6.0. The headers can be found in the *include* folder and the libraries in the *libs* folder. The files are downloaded when running the *download_vidhance* function. If your device uses a different architecture or Android version, you may need to replace these libraries with ones compatible with your device. Contact us if you need help with this matter.
+The camera wrapper depends on libraries found in the Android source tree. We have provided the needed headers and libraries for Nexus 6P which should be compatible with any 32-bit ARM-based device running Android 6.0. The files can be found in the *android* folder. The files for Android 5.1 and 6.0 are included in the SDK. If your device uses a different architecture or Android version, you may need to replace these libraries with ones compatible with your device. Contact us if you need help with this matter.
 
 ## Determining camera HAL and module version
 In order to choose the correct wrapper, you need to know which HAL and module version your original library has implemented. Query the device with:
