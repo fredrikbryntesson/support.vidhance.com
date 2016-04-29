@@ -83,9 +83,6 @@ When the valid paths are set, run the script:
 
 You now have access to a number of help functions listed in the terminal.
 
-## Downloading Vidhance library and Android dependencies
-Run the function `download_vidhance` in the terminal. Follow the instructions to start downloading. You will need a key to authorize the download. This will supply you with a Vidhance binary and the needed headers and libraries to build the wrapper for your version of Android.
-
 # Configuring for your device
 We recommend that you modify the example implementation for Nexus 6P to create a compatible version for your device.
 
