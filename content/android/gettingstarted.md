@@ -83,14 +83,11 @@ When the valid paths are set, run the script:
 
 You now have access to a number of help functions listed in the terminal.
 
-## Downloading Vidhance library and Android dependencies
-Run the function `download_vidhance` in the terminal. Follow the instructions to start downloading. You will need a key to authorize the download. This will supply you with a Vidhance binary and the needed headers and libraries to build the wrapper for your version of Android.
-
 # Configuring for your device
 We recommend that you modify the example implementation for Nexus 6P to create a compatible version for your device.
 
 ## Android dependencies
-The camera wrapper depends on libraries found in the Android source tree. We have provided the needed headers and libraries for Nexus 6P which should be compatible with any 32-bit ARM-based device running Android 6.0. The headers can be found in the *include* folder and the libraries in the *libs* folder. The files are downloaded when running the *download_vidhance* function. If your device uses a different architecture or Android version, you may need to replace these libraries with ones compatible with your device. Contact us if you need help with this matter.
+The camera wrapper depends on libraries found in the Android source tree. We have provided the needed headers and libraries for Nexus 6P which should be compatible with any 32-bit ARM-based device running Android 6.0. The files can be found in the *android* folder. The files for Android 5.1 and 6.0 are included in the SDK. If your device uses a different architecture or Android version, you may need to replace these libraries with ones compatible with your device. Contact us if you need help with this matter.
 
 ## Determining camera HAL and module version
 In order to choose the correct wrapper, you need to know which HAL and module version your original library has implemented. Query the device with:
@@ -132,23 +129,25 @@ This means the library is compiled for Android 6.0, using Camera module API vers
 In this file you can specify which Android API level you are building for. A complete list can be found [here](https://source.android.com/source/build-numbers.html).
 
 ## Changes in source code
-The `VidhanceProcessor` implementation in the Nexus 6P folder is an example of how to use the camera wrapper implementation in combination with the Vidhance library. You probably need some minor modifications before you start building.
-
-### Include correct VideoProcessor header
-Make sure the correct VideoProcessor header for your HAL version is included in VidhanceProcessor.h.
-```
-/* VidhanceProcessor.h */
-#include "../HAL/HAL3/VideoProcessor.h"
-#include "../HAL/HAL3/DoubleBufferVideoProcessor.h"
-```
+The `VidhanceContext` class in the vidhance folder is the reference implementation showing how to interact with the Vidhance API. The recommendation is to create your own context implementation and inherit this base class. Check the implementation of `Nexus6pContext` as an example. 
 
 ### Implement getStride
 The stride factor for GraphicBuffer depends on the platform you are using. You therefore need to define a function where this information can be accessed. Take a look at the implementation for Nexus 6P:
 ```c++
-stride_t VidhanceProcessor::getStride(const sp<GraphicBuffer>& buffer) {
-	return stride_t(ALIGN(buffer->width, buffer->usage & GraphicBuffer::USAGE_HW_VIDEO_ENCODER ? 64 : 32), ALIGN(buffer->height, 32));
+virtual stride_t getStride(const sp<GraphicBuffer>& buffer) {
+    int horizontalAlignment = 32;
+    int verticalAlignment = 32;
+    if (buffer->usage & GraphicBuffer::USAGE_HW_VIDEO_ENCODER)
+        horizontalAlignment = buffer->width > 3840 ? 128 : 64;
+    return stride_t(ALIGN(buffer->width, horizontalAlignment), ALIGN(buffer->height, verticalAlignment));
 }
 ```
+
+### Define context creation function
+A function needs to specify which `VidhanceContext` implementation should be chosen. Simply define this in the user space context code:
+```c++
+VidhanceContext* VidhanceContext::createVidhanceContext() { return new Nexus6pContext(); }
+``` 
 
 <a name="Building"></a>
 # Building
@@ -204,12 +203,12 @@ In the Android.mk file there are several build flags that can be used to configu
 
 # Using the Vidhance API
 
-Examine the *CameraWrapper* implementation in the HAL folder and use it as an example for how to interact with the Vidhance API for Android. Here is a more detailed description of the code using the Vidhance API:
+Examine the *VidhanceContext* implementation in the vidhance folder and use it as an example for how to interact with the Vidhance API for Android. Here is a more detailed description of the code using the Vidhance API:
 
 ## Initializing
 Start with including the header containing the Vidhance API:
 ```
-#include "../vidhance/vidhance.h"
+#include "vidhance/vidhance.h"
 ```
 
 Before you can use the Vidhance API you need to initialize it by calling the global load function:
@@ -236,7 +235,7 @@ vidhance_graphic_buffer_register_callbacks(
 ### Debug print
 If you want debug output from Vidhance you can register a print callback. A default function that prints to logcat is located in the vidhance folder but you are free to use your own.
 ```
-#include "../vidhance/debug/Debug.h"
+#include "vidhance/debug/Debug.h"
 ```
 ```
 vidhance_debug_register_callback(debugPrint);
