@@ -173,6 +173,35 @@ Every time you have rebuilt the wrapper library with `build` you can use the `pu
 # Restoring phone
 If you want to reset the device to its original state you can use the `restore` function. This will set the camera library on the device to the original.
 
+# Integrating the android wrapper
+
+The integration procedure is divided into several steps where each step is intended to add more functionality and performance.
+In the Android.mk file there are several build flags that can be used to configure how the integration is done.
+
+1. Running with PUREWRAPPER=1 will wrap the original HAL layer inside of Vidhance HAL.
+   The wrapper will leave all information sent in between the framework and the original HAL untouched.
+
+    ``` mk
+    LOCAL_CFLAGS += -DPUREWRAPPER=1
+    ```
+
+2. Next set PUREWRAPPER=0 to enable the wrapper to hijack the messages sent between the framework and HAL in order to stabilize the video recording.
+   Also make sure the flag SINGLEBUFFER=1 and that all other flags are set to 0.
+
+    ``` mk
+    LOCAL_CFLAGS += -DPUREWRAPPER=0
+    LOCAL_CFLAGS += -DSINGLEBUFFER=1
+    ```
+
+3. For further optimization and increased performance, set SINGLEBUFFER=0 and keep all the other flags set to 0.
+
+    ``` mk
+    LOCAL_CFLAGS += -DPUREWRAPPER=0
+    LOCAL_CFLAGS += -DSINGLEBUFFER=0
+    ```
+
+4. And as a final step the other configuration and feature flags can be used depending on your given platform and HAL version.
+
 # Using the Vidhance API
 
 Examine the *CameraWrapper* implementation in the HAL folder and use it as an example for how to interact with the Vidhance API for Android. Here is a more detailed description of the code using the Vidhance API:
