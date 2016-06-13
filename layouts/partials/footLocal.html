@@ -8,10 +8,12 @@ $('#downloadForm').on('submit', function(e) {
 	return false;
 });
 
-$('#downloadFormAndroid').on('submit', function(e) {
+$('#accessVidhanceAndroidForm').on('submit', function(e) {
 	key = $("input:first").val();
-	url = "https://aurora.imint.se/data/"+key+"/vidhance-sdk-android/release-2.2.0.tar.gz";
-	$('#hiddenIFrame').attr("src", url);
+	if(key != "") {
+		url = "https://aurora.imint.se/data/"+key+"/getting-started";
+		window.open(url);
+	}
 	return false;
 });
 

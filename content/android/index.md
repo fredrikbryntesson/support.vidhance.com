@@ -15,9 +15,6 @@ menu:
 + EGLImage extension
 + Android 4.4.4, Android 5.0 or higher
 
-# Evaluate
-## Nexus 6
-If you want to evaluate Vidhance we can provide you with an Android image with Vidhance included and instructions how to flash on Nexus 6. [Click here for instructions](evaluate)
 # Integration
 Vidhance SDK is based on a versatile C library with the possibility of integration at many different levels.
 ## Wrap Driver
